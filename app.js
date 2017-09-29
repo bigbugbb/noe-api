@@ -1,8 +1,8 @@
 const express = require('express');
 const app = express();
 
-var UserController = require('./controllers/UserController');
-app.use('/users', UserController);
+const UserController = require('./controllers/user-controller');
+app.use('/api/users', UserController);
 
 module.exports = app;
 
