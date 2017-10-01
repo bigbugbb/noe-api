@@ -10,10 +10,10 @@ const {users, populateUsers} = require('./seed/seed');
 
 beforeEach(populateUsers);
 
-describe('GET /api/users/me', () => {
+describe('GET /api/v1/users/me', () => {
   it('should return user if authenticated', (done) => {
     request(app)
-      .get('/api/users/me')
+      .get('/api/v1/users/me')
       .set('x-auth', users[0].tokens[0].token)
       .expect(200)
       .expect((res) => {
@@ -25,7 +25,7 @@ describe('GET /api/users/me', () => {
 
   it('should return 401 if not authenticated', (done) => {
     request(app)
-      .get('/api/users/me')
+      .get('/api/v1/users/me')
       .expect(401)
       .expect((res) => {
         expect(res.body).toEqual({});
@@ -34,7 +34,7 @@ describe('GET /api/users/me', () => {
   });
 });
 
-describe('POST /api/users', () => {
+describe('POST /api/v1/users', () => {
   it('should create a user', (done) => {
     var email = 'example@example.com';
     var phone = '1234567890';
@@ -43,7 +43,7 @@ describe('POST /api/users', () => {
     var lastname = 'Man';
 
     request(app)
-      .post('/api/users')
+      .post('/api/v1/users')
       .send({email, phone, password, firstname, lastname})
       .expect(200)
       .expect((res) => {
@@ -69,7 +69,7 @@ describe('POST /api/users', () => {
 
   it('should return validation errors if request invalid', (done) => {
     request(app)
-      .post('/api/users')
+      .post('/api/v1/users')
       .send({
         email: 'and',
         password: '123'
@@ -80,7 +80,7 @@ describe('POST /api/users', () => {
 
   it('should not create user if email in use', (done) => {
     request(app)
-      .post('/api/users')
+      .post('/api/v1/users')
       .send({
         email: users[0].email,
         password: 'Password123!'
@@ -90,10 +90,10 @@ describe('POST /api/users', () => {
   });
 });
 
-describe('POST /api/users/login', () => {
+describe('POST /api/v1/users/login', () => {
   it('should login user and return auth token', (done) => {
     request(app)
-      .post('/api/users/login')
+      .post('/api/v1/users/login')
       .send({
         email: users[1].email,
         password: users[1].password
@@ -119,7 +119,7 @@ describe('POST /api/users/login', () => {
 
   it('should reject invalid login', (done) => {
     request(app)
-      .post('/api/users/login')
+      .post('/api/v1/users/login')
       .send({
         email: users[1].email,
         password: users[1].password + '1'
@@ -141,10 +141,10 @@ describe('POST /api/users/login', () => {
   });
 });
 
-describe('DELETE /api/users/me/token', () => {
+describe('DELETE /api/v1/users/me/token', () => {
   it('should remove auth token on logout', (done) => {
     request(app)
-      .delete('/api/users/me/token')
+      .delete('/api/v1/users/me/token')
       .set('x-auth', users[0].tokens[0].token)
       .expect(200)
       .end((err, res) => {

@@ -10,7 +10,7 @@ router.use(bodyParser.json());
 const {User} = require('../models/user');
 const {authenticate} = require('../middleware/authenticate');
 
-router.post('/', (req, res) => {
+router.post('/users', (req, res) => {
   const body = _.pick(req.body, ['email', 'phone', 'password', 'firstname', 'lastname']);
   const user = new User(body);
 
@@ -23,11 +23,11 @@ router.post('/', (req, res) => {
   });
 });
 
-router.get('/me', authenticate, (req, res) => {
+router.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
 });
 
-router.post('/login', (req, res) => {
+router.post('/users/login', (req, res) => {
   var body = _.pick(req.body, ['email', 'password']);
 
   User.findByCredentials(body.email, body.password).then((user) => {
@@ -35,11 +35,11 @@ router.post('/login', (req, res) => {
       res.header('x-auth', token).send(user);
     });
   }).catch((e) => {
-    res.status(400).send();
+    res.status(400).send(e);
   });
 });
 
-router.delete('/me/token', authenticate, (req, res) => {
+router.delete('/users/me/token', authenticate, (req, res) => {
   req.user.removeToken(req.token).then(() => {
     res.status(200).send();
   }, () => {
@@ -47,7 +47,7 @@ router.delete('/me/token', authenticate, (req, res) => {
   });
 });
 
-router.get('/', (req, res) => {
+router.get('/users', (req, res) => {
   User.find().then((users) => {
     res.send({users});
   }, (e) => {
@@ -55,7 +55,7 @@ router.get('/', (req, res) => {
   });
 });
 
-router.get('/:id', (req, res) => {
+router.get('/users/:id', (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
@@ -74,7 +74,7 @@ router.get('/:id', (req, res) => {
 });
 
 // DELETES A USER FROM THE DATABASE
-router.delete('/:id', function (req, res) {
+router.delete('/users/:id', function (req, res) {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
@@ -89,7 +89,7 @@ router.delete('/:id', function (req, res) {
 });
 
 // UPDATES A SINGLE USER IN THE DATABASE
-router.put('/:id', function (req, res) {
+router.put('/users/:id', function (req, res) {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
