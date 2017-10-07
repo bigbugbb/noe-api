@@ -13,9 +13,9 @@ beforeEach(populateUsers);
 beforeEach(populateStudents);
 
 describe('POST /api/v1/students', () => {
-  const token = users[0].tokens[0].token;
+  const token = users[2].tokens[0].token;
   const student = {
-    userId: users[0]._id.toHexString(),
+    userId: users[2]._id.toHexString(),
     firstname: 'Iron',
     lastname: 'Man',
     avatar: 'https://www.sideshowtoy.com/photo_902622_thumb.jpg',
@@ -76,5 +76,84 @@ describe('POST /api/v1/students', () => {
       .send({userId, firstname, lastname, avatar, gender, nationality, dob, phone})
       .expect(400)
       .end(done);
+  });
+});
+
+describe('GET /api/v1/students', () => {
+  const token = users[0].tokens[0].token;
+
+  it('should get all students', (done) => {
+    request(app)
+      .get('/api/v1/students')
+      .set('Authorization', `Bearer: ${token}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.students.length).toBe(2);
+      })
+      .end(done);
+  });
+});
+
+describe('GET /api/v1/students/:id', () => {
+  const token = users[0].tokens[0].token;
+
+  it('should return student doc', (done) => {
+    request(app)
+      .get(`/api/v1/students/${students[0]._id.toHexString()}`)
+      .set('Authorization', `Bearer: ${token}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.student.firstname).toBe(students[0].firstname);
+        expect(res.body.student.lastname).toBe(students[0].lastname);
+      })
+      .end(done);
+  });
+
+  // it('should not return student doc created by other user', (done) => {
+  //   request(app)
+  //     .get(`/api/v1/students/${students[1]._id.toHexString()}`)
+  //     .set('Authorization', `Bearer: ${token}`)
+  //     .expect()
+  // });
+
+  it('should return 404 if student not found', (done) => {
+    const studentId = new ObjectID().toHexString();
+
+    request(app)
+      .get(`/api/v1/students/${studentId}`)
+      .set('Authorization', `Bearer: ${token}`)
+      .expect(404)
+      .end(done);
+  });
+
+  it('should return 404 for non-object ids', (done) => {
+    request(app)
+      .get(`/api/v1/students/123abc`)
+      .set('Authorization', `Bearer: ${token}`)
+      .expect(404)
+      .end(done);
+  })
+});
+
+describe('DELETE /api/v1/students/:id', () => {
+  const token = users[0].tokens[0].token;
+
+  it('should remove a student', (done) => {
+    const studentId = students[0]._id.toHexString();
+
+    request(app)
+      .delete(`/api/v1/students/${studentId}`)
+      .set('Authorization', `Bearer: ${token}`)
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        Student.findById(students[0]._id).then((students) => {
+          expect(students).toBeFalsy();
+          done();
+        }).catch((e) => done(e));
+      });
   });
 });

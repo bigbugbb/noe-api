@@ -39,22 +39,18 @@ describe('GET /api/v1/users/me', () => {
 describe('POST /api/v1/users', () => {
   it('should create a user', (done) => {
     var email = 'example@example.com';
-    var phone = '1234567890';
     var password = '123mnb!';
-    var firstname = 'Super';
-    var lastname = 'Man';
+    var role = 'student';
 
     request(app)
       .post('/api/v1/users')
-      .send({email, phone, password, firstname, lastname})
+      .send({email, password, role})
       .expect(200)
       .expect((res) => {
         expect(res.headers['x-auth']).toBeTruthy();
         expect(res.body._id).toBeTruthy();
         expect(res.body.email).toBe(email);
-        expect(res.body.phone).toBe(phone);
-        expect(res.body.firstname).toBe(firstname);
-        expect(res.body.lastname).toBe(lastname);
+        expect(res.body.role).toBe(role);
       })
       .end((err) => {
         if (err) {

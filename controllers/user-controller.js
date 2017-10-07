@@ -7,7 +7,7 @@ const {User} = require('../models/user');
 const {authenticate} = require('../middleware/authenticate');
 
 router.post('/users', (req, res) => {
-  const body = _.pick(req.body, ['email', 'phone', 'password', 'firstname', 'lastname']);
+  const body = _.pick(req.body, ['email', 'phone', 'password', 'role', 'firstname', 'lastname']);
   const user = new User(body);
 
   user.save().then(() => {

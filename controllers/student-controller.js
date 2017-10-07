@@ -12,7 +12,7 @@ router.post('/students', authenticate, (req, res) => {
   if (!ObjectID.isValid(userId)) {
     return res.status(404).send();
   }
-  // const body = _.pick(req.body, ['firstname', 'lastname']);
+
   const student = new Student(req.body);
 
   student.save().then((doc) => {
@@ -23,7 +23,7 @@ router.post('/students', authenticate, (req, res) => {
 });
 
 router.get('/students', authenticate, (req, res) => {
-  Student.find().then((students) => {
+  Student.find(req.query).then((students) => {
     res.send({students});
   }, (e) => {
     res.status(400).send(e);
@@ -77,7 +77,8 @@ router.delete('/students/:id', authenticate, (req, res) => {
   }
 
   Student.findOneAndRemove({
-    _id: id
+    _id: id,
+    userId: req.user._id
   }).then((student) => {
     if (!student) {
       return res.status(404).send();

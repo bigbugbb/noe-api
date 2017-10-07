@@ -1,8 +1,7 @@
 const {ObjectID} = require('mongodb');
 const {Student} = require('./../../models/student');
+const {userOneId, userTwoId} = require('./userIds');
 
-const userOneId = new ObjectID();
-const userTwoId = new ObjectID();
 const studentOneId = new ObjectID();
 const studentTwoId = new ObjectID();
 const students = [{

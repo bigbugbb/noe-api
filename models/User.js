@@ -12,28 +12,14 @@ var UserSchema = new mongoose.Schema({
     minlength: 3,
     unique: true,
     validate: {
-      validator: validator.isEmail,
+      validator: value => validator.isEmail(value),
       message: '{VALUE} is not a valid email'
     }
-  },
-  phone: {
-    type: String,
-    required: true
   },
   password: {
     type: String,
     required: true,
     minlength: 6
-  },
-  firstname: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  lastname: {
-    type: String,
-    required: true,
-    trim: true
   },
   tokens: [{
     access: {
@@ -45,18 +31,20 @@ var UserSchema = new mongoose.Schema({
       required: true
     }
   }],
-  roles: [{
-    role: {
-      type: String
-    }
-  }]
+  role: {
+    type: String,
+    enum: ['admin', 'student', 'school', 'company'],
+    default: 'admin'
+  },
+  createdAt: Date,
+  updatedAt: Date
 });
 
 UserSchema.methods.toJSON = function() {
   var user = this;
   var userObject = user.toObject();
 
-  return _.pick(userObject, ['_id', 'email', 'phone', 'firstname', 'lastname']);
+  return _.pick(userObject, ['_id', 'email', 'role']);
 };
 
 UserSchema.methods.generateAuthToken = function() {
@@ -121,6 +109,11 @@ UserSchema.statics.findByCredentials = function (email, password) {
 
 UserSchema.pre('save', function (next) {
   var user = this;
+
+  user.updatedAt = new Date();
+  if (!user.createdAt) {
+    user.createdAt = user.updatedAt;
+  }
 
   if (user.isModified('password')) {
     bcrypt.genSalt(10, (err, salt) => {

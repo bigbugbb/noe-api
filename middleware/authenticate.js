@@ -2,6 +2,7 @@ var {User} = require('./../models/user');
 
 var authenticate = (req, res, next) => {
   var auth = req.header('Authorization');
+
   if (!auth) {
     return res.status(401).send();
   }
