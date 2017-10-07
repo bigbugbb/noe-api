@@ -3,10 +3,6 @@ const router = express.Router();
 const _ = require('lodash');
 const db = require('../db');
 const {ObjectID} = require('mongodb');
-
-const bodyParser = require('body-parser');
-router.use(bodyParser.json());
-
 const {User} = require('../models/user');
 const {authenticate} = require('../middleware/authenticate');
 
@@ -81,7 +77,7 @@ router.delete('/users/:id', function (req, res) {
     return res.status(404).send();
   }
 
-  User.findByIdAndRemove(id).then((user) => {    
+  User.findByIdAndRemove(id).then((user) => {
     res.send({user});
   }).catch((e) => {
     res.status(400).send(e);

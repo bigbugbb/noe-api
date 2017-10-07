@@ -6,15 +6,17 @@ const {ObjectID} = require('mongodb');
 
 const app = require('../app');
 const {User} = require('../models/user');
-const {users, populateUsers} = require('./seed/seed');
+const {users, populateUsers} = require('./seed');
 
 beforeEach(populateUsers);
+
+const token = users[0].tokens[0].token;
 
 describe('GET /api/v1/users/me', () => {
   it('should return user if authenticated', (done) => {
     request(app)
       .get('/api/v1/users/me')
-      .set('x-auth', users[0].tokens[0].token)
+      .set('Authorization', `Bearer: ${token}`)
       .expect(200)
       .expect((res) => {
         expect(res.body._id).toBe(users[0]._id.toHexString());
@@ -145,7 +147,7 @@ describe('DELETE /api/v1/users/me/token', () => {
   it('should remove auth token on logout', (done) => {
     request(app)
       .delete('/api/v1/users/me/token')
-      .set('x-auth', users[0].tokens[0].token)
+      .set('Authorization', `Bearer: ${token}`)
       .expect(200)
       .end((err, res) => {
         if (err) {

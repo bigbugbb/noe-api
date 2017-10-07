@@ -2,9 +2,14 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const _ = require('lodash');
 
+var Schema = mongoose.Schema,
+ObjectId = Schema.Types.ObjectId;
+
 var StudentSchema = new mongoose.Schema({
   userId: {
-    type: String,
+    type: ObjectId,
+    ref: 'User',
+    index: {unique: true},
     required: true
   },
   firstname: {
@@ -19,38 +24,154 @@ var StudentSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    required: true
-  },
-  age: {
-    type: Number,
-    required: true
+    required: true,
+    trim: true
   },
   gender: {
     type: String,
     enum: ['male', 'female'],
     default: 'male'
   },
-  gpa: {
-    type: Number    
-  },
-  toefl: {
-    type: Number
-  },
-  tuition: {
-    type: Number
-  },
-  introduction: {
+  nationality: {
     type: String,
     required: true
   },
-  skills: [{
-    skill: {
-      type: String
+  dob: {
+    type: Date,
+    required: true
+  },
+  phone: {
+    type: String,
+    required: true
+  },
+  introduction: {
+    text: {
+      type: String,
+      trim: true
+    },
+    pictures: [{
+      title: {
+        type: String,
+        trim: true
+      },
+      link: {
+        type: String,
+        trim: true
+      }
+    }],
+    videos: [{
+      title: {
+        type: String,
+        trim: true
+      },
+      link: {
+        type: String,
+        trim: true
+      }
+    }]
+  },
+  currentGrade: {
+    type: String,
+    trim: true
+  },
+  gradeApplying: {
+    type: String,
+    trim: true
+  },
+  preferSchoolType: {
+    type: String,
+    enum: ['coed', 'all_girl', 'all_boy'],
+    default: 'coed'
+  },
+  preferSchoolLocation: [{
+    city: {
+      type: String,
+      trim: true
+    },
+    state: {
+      type: String,
+      trim: true
     }
   }],
-  prizes: [{
-    prize: {
-      type: String
+  preferAccommodation: {
+    type: String,
+    enum: ['boarding', 'day school', 'apartment'],
+    default: 'boarding'
+  },
+  annualBudget: {
+    type: Number,
+    min: 0,
+    max: 10000000
+  },
+  language: [{
+    kind: {
+      type: String,
+      trim: true
+    },
+    level: {
+      type: String,
+      trim: true
+    }
+  }],
+  gpa: [{
+    peroid: {
+      type: String,
+      trim: true
+    },
+    grade: {
+      type: Number
+    }
+  }],
+  skills: [{
+    type: String,
+    trim: true
+  }],
+  interests: [{
+    type: String,
+    trim: true
+  }],
+  passport: [{
+    type: String,
+    trim: true
+  }],
+  recommendations: [{
+    title: {
+      type: String,
+      trim: true
+    },
+    link: {
+      type: String,
+      trim: true
+    }
+  }],
+  transcripts: [{
+    title: {
+      type: String,
+      trim: true
+    },
+    link: {
+      type: String,
+      trim: true
+    }
+  }],
+  stdTests: [{
+    title: {
+      type: String,
+      trim: true
+    },
+    score: {
+      type: Number,
+      min: 0
+    }
+  }],
+  supplements: [{
+    title: {
+      type: String,
+      trim: true
+    },
+    link: {
+      type: String,
+      trim: true
     }
   }]
 });
