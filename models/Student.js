@@ -35,8 +35,10 @@ var StudentSchema = new mongoose.Schema({
   firstname: { type: String, trim: true },
   lastname: { type: String, trim: true },
   avatar: { type: String, trim: true },
+  education: { type: String, trim: true },
+  school: { type: String, trim: true },
   gender: { type: String, enum: ['male', 'female'], default: 'male' },
-  nationality: { type: String, trim: true },
+  country: { type: String, trim: true },
   birthday: { type: Date },
   email: { type: String, required: true, trim: true, minlength: 3, unique: true,
     validate: {
