@@ -11,4 +11,3 @@ app.use('/api/v1', require('./controllers/user-controller'));
 app.use('/api/v1', require('./controllers/student-controller'));
 
 module.exports = app;
-

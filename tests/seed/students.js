@@ -1,6 +1,6 @@
-const {ObjectID} = require('mongodb');
-const {Student} = require('./../../models/student');
-const {userOneId, userTwoId} = require('./userIds');
+const { ObjectID } = require('mongodb');
+const { Student } = require('./../../models/student');
+const { userOneId, userTwoId } = require('./userIds');
 
 const studentOneId = new ObjectID();
 const studentTwoId = new ObjectID();
@@ -175,4 +175,4 @@ const populateStudents = (done) => {
   }).then(() => done());
 };
 
-module.exports = {students, populateStudents};
+module.exports = { students, populateStudents };

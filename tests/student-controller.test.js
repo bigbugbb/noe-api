@@ -3,11 +3,11 @@ require('../config/config');
 const expect = require('expect');
 const request = require('supertest');
 const _ = require('lodash');
-const {ObjectID} = require('mongodb');
+const { ObjectID } = require('mongodb');
 
 const app = require('../app');
-const {Student} = require('../models/student');
-const {users, students, populateUsers, populateStudents} = require('./seed');
+const { Student } = require('../models/student');
+const { users, students, populateUsers, populateStudents } = require('./seed');
 
 beforeEach(populateUsers);
 beforeEach(populateStudents);
@@ -26,11 +26,11 @@ describe('POST /api/v1/students', () => {
   }
 
   it('should create a student', (done) => {
-    const {userId, firstname, lastname, avatar, gender, nationality, dob, phone} = student;
+    const { userId, firstname, lastname, avatar, gender, nationality, dob, phone } = student;
     request(app)
       .post('/api/v1/students')
       .set('Authorization', `Bearer: ${token}`)
-      .send({userId, firstname, lastname, avatar, gender, nationality, dob, phone})
+      .send({ userId, firstname, lastname, avatar, gender, nationality, dob, phone })
       .expect(200)
       .expect((res) => {
         expect(res.body._id).toBeTruthy();
@@ -48,7 +48,7 @@ describe('POST /api/v1/students', () => {
           return done(err);
         }
 
-        Student.findOne({userId}).then((student) => {
+        Student.findOne({ userId }).then((student) => {
           expect(student).toBeTruthy();
           done();
         }).catch((e) => done(e));
@@ -68,12 +68,12 @@ describe('POST /api/v1/students', () => {
 
   it('should not create user if userId in use', (done) => {
     const userId = students[0].userId;
-    const {firstname, lastname, avatar, gender, nationality, dob, phone} = student;
+    const { firstname, lastname, avatar, gender, nationality, dob, phone } = student;
 
     request(app)
       .post('/api/v1/students')
       .set('Authorization', `Bearer: ${token}`)
-      .send({userId, firstname, lastname, avatar, gender, nationality, dob, phone})
+      .send({ userId, firstname, lastname, avatar, gender, nationality, dob, phone })
       .expect(400)
       .end(done);
   });

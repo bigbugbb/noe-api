@@ -1,4 +1,4 @@
-var {User} = require('./../models/user');
+var { User } = require('./../models/user');
 
 var authenticate = (req, res, next) => {
   var auth = req.header('Authorization');
@@ -22,4 +22,4 @@ var authenticate = (req, res, next) => {
   });
 };
 
-module.exports = {authenticate};
+module.exports = { authenticate };

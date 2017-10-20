@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const _ = require('lodash');
 const db = require('../db');
-const {ObjectID} = require('mongodb');
-const {User} = require('../models/user');
-const {authenticate} = require('../middleware/authenticate');
+const { ObjectID } = require('mongodb');
+const { User } = require('../models/user');
+const { authenticate } = require('../middleware/authenticate');
 
 router.post('/users', (req, res) => {
   const body = _.pick(req.body, ['email', 'phone', 'password', 'role', 'firstname', 'lastname']);
@@ -45,7 +45,7 @@ router.delete('/users/me/token', authenticate, (req, res) => {
 
 router.get('/users', (req, res) => {
   User.find().then((users) => {
-    res.send({users});
+    res.send({ users });
   }, (e) => {
     res.status(400).send(e);
   });
@@ -63,7 +63,7 @@ router.get('/users/:id', (req, res) => {
       return res.status(404).send();
     }
 
-    res.send({user});
+    res.send({ user });
   }).catch((e) => {
     res.status(400).send(e);
   });
@@ -78,7 +78,7 @@ router.delete('/users/:id', function (req, res) {
   }
 
   User.findByIdAndRemove(id).then((user) => {
-    res.send({user});
+    res.send({ user });
   }).catch((e) => {
     res.status(400).send(e);
   });
@@ -93,7 +93,7 @@ router.put('/users/:id', function (req, res) {
   }
 
   User.findByIdAndUpdate(id).then((user) => {
-    res.send({user});
+    res.send({ user });
   }).catch((e) => {
     res.status(400).send(e);
   });

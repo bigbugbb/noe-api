@@ -35,24 +35,24 @@ var UserSchema = new mongoose.Schema({
     type: String,
     enum: ['admin', 'student', 'school', 'company'],
     default: 'admin'
-  },
-  createdAt: Date,
-  updatedAt: Date
+  }
+}, {
+  timestamps: true
 });
 
-UserSchema.methods.toJSON = function() {
+UserSchema.methods.toJSON = function () {
   var user = this;
   var userObject = user.toObject();
 
   return _.pick(userObject, ['_id', 'email', 'role']);
 };
 
-UserSchema.methods.generateAuthToken = function() {
+UserSchema.methods.generateAuthToken = function () {
   var user = this;
   var access = 'auth';
-  var token = jwt.sign({_id: user._id.toHexString(), access}, process.env.JWT_SECRET).toString();
+  var token = jwt.sign({ _id: user._id.toHexString(), access }, process.env.JWT_SECRET).toString();
 
-  user.tokens.push({access, token});
+  user.tokens.push({ access, token });
 
   return user.save().then(() => {
     return token;
@@ -64,7 +64,7 @@ UserSchema.methods.removeToken = function (token) {
 
   return user.update({
     $pull: {
-      tokens: {token}
+      tokens: { token }
     }
   });
 };
@@ -89,7 +89,7 @@ UserSchema.statics.findByToken = function (token) {
 UserSchema.statics.findByCredentials = function (email, password) {
   var User = this;
 
-  return User.findOne({email}).then((user) => {
+  return User.findOne({ email }).then((user) => {
     if (!user) {
       return Promise.reject();
     }
@@ -110,11 +110,6 @@ UserSchema.statics.findByCredentials = function (email, password) {
 UserSchema.pre('save', function (next) {
   var user = this;
 
-  user.updatedAt = new Date();
-  if (!user.createdAt) {
-    user.createdAt = user.updatedAt;
-  }
-
   if (user.isModified('password')) {
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(user.password, salt, (err, hash) => {
@@ -129,4 +124,4 @@ UserSchema.pre('save', function (next) {
 
 var User = mongoose.model('User', UserSchema);
 
-module.exports = {User};
+module.exports = { User };

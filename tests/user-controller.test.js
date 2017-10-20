@@ -2,11 +2,11 @@ require('../config/config');
 
 const expect = require('expect');
 const request = require('supertest');
-const {ObjectID} = require('mongodb');
+const { ObjectID } = require('mongodb');
 
 const app = require('../app');
-const {User} = require('../models/user');
-const {users, populateUsers} = require('./seed');
+const { User } = require('../models/user');
+const { users, populateUsers } = require('./seed');
 
 beforeEach(populateUsers);
 
@@ -44,7 +44,7 @@ describe('POST /api/v1/users', () => {
 
     request(app)
       .post('/api/v1/users')
-      .send({email, password, role})
+      .send({ email, password, role })
       .expect(200)
       .expect((res) => {
         expect(res.headers['x-auth']).toBeTruthy();
@@ -57,7 +57,7 @@ describe('POST /api/v1/users', () => {
           return done(err);
         }
 
-        User.findOne({email}).then((user) => {
+        User.findOne({ email }).then((user) => {
           expect(user).toBeTruthy();
           expect(user.password).not.toBe(password);
           done();

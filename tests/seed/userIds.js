@@ -1,4 +1,4 @@
-const {ObjectID} = require('mongodb');
+const { ObjectID } = require('mongodb');
 
 const userOneId = new ObjectID();
 const userTwoId = new ObjectID();

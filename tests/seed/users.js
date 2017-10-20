@@ -1,7 +1,7 @@
-const {ObjectID} = require('mongodb');
+const { ObjectID } = require('mongodb');
 const jwt = require('jsonwebtoken');
-const {User} = require('./../../models/user');
-const {userOneId, userTwoId, userThreeId} = require('./userIds');
+const { User } = require('./../../models/user');
+const { userOneId, userTwoId, userThreeId } = require('./userIds');
 
 const users = [{
   _id: userOneId,
@@ -12,7 +12,7 @@ const users = [{
   lastname: 'Smith',
   tokens: [{
     access: 'auth',
-    token: jwt.sign({_id: userOneId, access: 'auth'}, process.env.JWT_SECRET).toString()
+    token: jwt.sign({ _id: userOneId, access: 'auth' }, process.env.JWT_SECRET).toString()
   }]
 }, {
   _id: userTwoId,
@@ -23,7 +23,7 @@ const users = [{
   lastname: 'Lindon',
   tokens: [{
     access: 'auth',
-    token: jwt.sign({_id: userTwoId, access: 'auth'}, process.env.JWT_SECRET).toString()
+    token: jwt.sign({ _id: userTwoId, access: 'auth' }, process.env.JWT_SECRET).toString()
   }]
 }, {
   _id: userThreeId,
@@ -34,7 +34,7 @@ const users = [{
   lastname: 'bug',
   tokens: [{
     access: 'auth',
-    token: jwt.sign({_id: userThreeId, access: 'auth'}, process.env.JWT_SECRET).toString()
+    token: jwt.sign({ _id: userThreeId, access: 'auth' }, process.env.JWT_SECRET).toString()
   }]
 }];
 
@@ -48,4 +48,4 @@ const populateUsers = (done) => {
   }).then(() => done());
 };
 
-module.exports = {users, populateUsers};
+module.exports = { users, populateUsers };
