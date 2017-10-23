@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 
+const Schema = mongoose.Schema;
+
 var UserSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -11,6 +13,7 @@ var UserSchema = new mongoose.Schema({
     trim: true,
     minlength: 3,
     unique: true,
+    lowercase: true,
     validate: {
       validator: value => validator.isEmail(value),
       message: '{VALUE} is not a valid email'
@@ -19,7 +22,8 @@ var UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 6
+    minlength: 6,
+    maxlength: 64
   },
   tokens: [{
     access: {
@@ -33,79 +37,89 @@ var UserSchema = new mongoose.Schema({
   }],
   role: {
     type: String,
-    enum: ['admin', 'student', 'school', 'company'],
-    default: 'admin'
+    enum: ['Student', 'School', 'Company'],
+    default: 'Student',
+    required: true
+  },
+  profile: {
+    type: Schema.ObjectId,
+    refPath: 'role'
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  retainKeyOrder: true,
+  runSettersOnQuery: true, // Mongoose will not automatically lowercase the email in your queries
 });
 
-UserSchema.methods.toJSON = function () {
-  var user = this;
-  var userObject = user.toObject();
+class UserClass {
+  toJSON() {
+    var user = this;
+    var userObject = user.toObject();
 
-  return _.pick(userObject, ['_id', 'email', 'role']);
-};
+    return _.pick(userObject, ['_id', 'email', 'role', 'profile']);
+  };
 
-UserSchema.methods.generateAuthToken = function () {
-  var user = this;
-  var access = 'auth';
-  var token = jwt.sign({ _id: user._id.toHexString(), access }, process.env.JWT_SECRET).toString();
+  generateAuthToken() {
+    var user = this;
+    var access = 'auth';
+    var token = jwt.sign({ _id: user._id.toHexString(), access }, process.env.JWT_SECRET).toString();
 
-  user.tokens.push({ access, token });
+    user.tokens.push({ access, token });
 
-  return user.save().then(() => {
-    return token;
-  });
-};
+    return user.save().then(() => token);
+  };
 
-UserSchema.methods.removeToken = function (token) {
-  var user = this;
+  removeToken(token) {
+    var user = this;
 
-  return user.update({
-    $pull: {
-      tokens: { token }
-    }
-  });
-};
+    return user.update({
+      $pull: {
+        tokens: { token }
+      }
+    });
+  };
 
-UserSchema.statics.findByToken = function (token) {
-  var User = this;
-  var decoded;
+  static findByToken(token) {
+    var User = this;
+    var decoded;
 
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET);
-  } catch (e) {
-    return Promise.reject();
-  }
-
-  return User.findOne({
-    '_id': decoded._id,
-    'tokens.token': token,
-    'tokens.access': 'auth'
-  });
-};
-
-UserSchema.statics.findByCredentials = function (email, password) {
-  var User = this;
-
-  return User.findOne({ email }).then((user) => {
-    if (!user) {
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
       return Promise.reject();
     }
 
-    return new Promise((resolve, reject) => {
-      // Use bcrypt.compare to compare password and user.password
-      bcrypt.compare(password, user.password, (err, res) => {
-        if (res) {
-          resolve(user);
-        } else {
-          reject();
-        }
+    return User.findOne({
+      '_id': decoded._id,
+      'tokens.token': token,
+      'tokens.access': 'auth'
+    })
+    .populate('profile');
+  };
+
+  static findByCredentials(email, password) {
+    var User = this;
+
+    return User.findOne({ email }).populate('profile').then((user) => {
+      if (!user) {
+        return Promise.reject();
+      }
+
+      return new Promise((resolve, reject) => {
+        // Use bcrypt.compare to compare password and user.password
+        bcrypt.compare(password, user.password, (err, res) => {
+          if (res) {
+            resolve(user);
+          } else {
+            reject();
+          }
+        });
       });
     });
-  });
-};
+  };
+}
+
+UserSchema.loadClass(UserClass);
 
 UserSchema.pre('save', function (next) {
   var user = this;
