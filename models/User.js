@@ -3,6 +3,7 @@ const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
+const { Student } = require('./student');
 
 const Schema = mongoose.Schema;
 
@@ -57,7 +58,17 @@ class UserClass {
     var userObject = user.toObject();
 
     return _.pick(userObject, ['_id', 'email', 'role', 'profile']);
-  };
+  }
+
+  createProfile() {
+    var user = this;
+    const RoleClass = { Student };
+    var profile = new RoleClass[user.role](_.pick(user, ['email', 'phone', 'firstname', 'lastname']));
+
+    return profile.save().then(() => {
+      return user.update({ $set: { profile: profile._id }});
+    });
+  }
 
   generateAuthToken() {
     var user = this;
@@ -67,7 +78,7 @@ class UserClass {
     user.tokens.push({ access, token });
 
     return user.save().then(() => token);
-  };
+  }
 
   removeToken(token) {
     var user = this;
@@ -77,7 +88,7 @@ class UserClass {
         tokens: { token }
       }
     });
-  };
+  }
 
   static findByToken(token) {
     var User = this;
@@ -95,7 +106,7 @@ class UserClass {
       'tokens.access': 'auth'
     })
     .populate('profile');
-  };
+  }
 
   static findByCredentials(email, password) {
     var User = this;
@@ -116,7 +127,7 @@ class UserClass {
         });
       });
     });
-  };
+  }
 }
 
 UserSchema.loadClass(UserClass);

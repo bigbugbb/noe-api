@@ -11,9 +11,13 @@ router.post('/users', (req, res) => {
   const user = new User(body);
 
   user.save().then(() => {
+    return user.createProfile();
+  }).then(() => {
     return user.generateAuthToken();
   }).then((token) => {
-    res.header('x-auth', token).send(user);
+    User.findById(user.id).populate('profile').then((user) => {
+      res.header('x-auth', token).send(user);
+    });
   }).catch((e) => {
     res.status(400).send(e);
   });

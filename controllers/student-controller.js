@@ -52,7 +52,7 @@ router.get('/students/:id', authenticate, (req, res) => {
 
 router.patch('/students/:id', authenticate, (req, res) => {
   const id = req.params.id;
-  const body = _.omit(req.body, ['_id', 'userId']);
+  const body = _.omit(req.body, ['_id']);
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
@@ -76,10 +76,7 @@ router.delete('/students/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Student.findOneAndRemove({
-    _id: id,
-    userId: req.user._id
-  }).then((student) => {
+  Student.findOneAndRemove({ _id: id }).then((student) => {
     if (!student) {
       return res.status(404).send();
     }
