@@ -28,7 +28,7 @@ router.get('/users/me', authenticate, (req, res) => {
 });
 
 router.post('/users/login', (req, res) => {
-  var body = _.pick(req.body, ['email', 'password']);
+  const body = _.pick(req.body, ['email', 'password']);
 
   User.findByCredentials(body.email, body.password).then((user) => {
     return user.generateAuthToken().then((token) => {

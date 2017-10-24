@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const _ = require('lodash');
 
-var Schema = mongoose.Schema,
-  ObjectId = Schema.Types.ObjectId;
+var Schema = mongoose.Schema;
 
 var StudentSchema = new mongoose.Schema({
   // basic intro

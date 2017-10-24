@@ -7,12 +7,6 @@ const { Student } = require('../models/student');
 const { authenticate } = require('../middleware/authenticate');
 
 router.post('/students', authenticate, (req, res) => {
-  const userId = req.body.userId;
-
-  if (!ObjectID.isValid(userId)) {
-    return res.status(404).send();
-  }
-
   const student = new Student(req.body);
 
   student.save().then((doc) => {

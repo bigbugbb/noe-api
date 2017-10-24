@@ -54,16 +54,16 @@ var UserSchema = new mongoose.Schema({
 
 class UserClass {
   toJSON() {
-    var user = this;
-    var userObject = user.toObject();
+    const user = this;
+    const userObject = user.toObject();
 
     return _.pick(userObject, ['_id', 'email', 'role', 'profile']);
   }
 
   createProfile() {
-    var user = this;
+    const user = this;
     const RoleClass = { Student };
-    var profile = new RoleClass[user.role](_.pick(user, ['email', 'phone', 'firstname', 'lastname']));
+    const profile = new RoleClass[user.role](_.pick(user, ['email', 'phone', 'firstname', 'lastname']));
 
     return profile.save().then(() => {
       return user.update({ $set: { profile: profile._id }});
@@ -71,9 +71,9 @@ class UserClass {
   }
 
   generateAuthToken() {
-    var user = this;
-    var access = 'auth';
-    var token = jwt.sign({ _id: user._id.toHexString(), access }, process.env.JWT_SECRET).toString();
+    const user = this;
+    const access = 'auth';
+    const token = jwt.sign({ _id: user._id.toHexString(), access }, process.env.JWT_SECRET).toString();
 
     user.tokens.push({ access, token });
 
@@ -81,7 +81,7 @@ class UserClass {
   }
 
   removeToken(token) {
-    var user = this;
+    const user = this;
 
     return user.update({
       $pull: {
@@ -91,8 +91,8 @@ class UserClass {
   }
 
   static findByToken(token) {
-    var User = this;
-    var decoded;
+    const User = this;
+    let decoded;
 
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -109,7 +109,7 @@ class UserClass {
   }
 
   static findByCredentials(email, password) {
-    var User = this;
+    const User = this;
 
     return User.findOne({ email }).populate('profile').then((user) => {
       if (!user) {
