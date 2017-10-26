@@ -29,7 +29,7 @@ var StudentSchema = new mongoose.Schema({
   // Standardized test scores
   itep: { type: Number },
   slep: { type: Number },
-  toeflJr: { type: Number },
+  toefljr: { type: Number },
   toefl: { type: Number },
   ssat: { type: Number },
   ielts: { type: Number },
