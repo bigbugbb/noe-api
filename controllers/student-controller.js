@@ -17,7 +17,17 @@ router.post('/students', authenticate, (req, res) => {
 });
 
 router.get('/students', authenticate, (req, res) => {
-  Student.find(req.query).then((students) => {
+  let params = _.get(req, 'query.params', "[{}]");
+
+  try {
+    params = _.first(JSON.parse(
+      params.replace(/\"min\"/g, '\"$gte\"').replace(/\"max\"/g, '\"$lte\"')
+    ));
+  } catch (e) {
+    console.log(e);
+  }
+
+  Student.find(params).then((students) => {
     res.send({ students });
   }, (e) => {
     res.status(400).send(e);
