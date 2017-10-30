@@ -11,7 +11,7 @@ router.post('/users', (req, res) => {
   const user = new User(body);
 
   user.save().then(() => {
-    return user.createProfile();
+    return user.createProfile(body);
   }).then(() => {
     return user.generateAuthToken();
   }).then((token) => {

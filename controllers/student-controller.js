@@ -6,6 +6,10 @@ const { ObjectID } = require('mongodb');
 const { Student } = require('../models/student');
 const { authenticate } = require('../middleware/authenticate');
 
+const defaultPage = 1;
+const defaultLimit = 20;
+const defaultQueryParams = "[{}]";
+
 router.post('/students', authenticate, (req, res) => {
   const student = new Student(req.body);
 
@@ -17,7 +21,10 @@ router.post('/students', authenticate, (req, res) => {
 });
 
 router.get('/students', authenticate, (req, res) => {
-  let params = _.get(req, 'query.params', "[{}]");
+  let total = 0;
+  let page  = _.toInteger(_.get(req, 'query.page', defaultPage));
+  let limit = _.toInteger(_.get(req, 'query.limit', defaultLimit));
+  let params = _.get(req, 'query.params', defaultQueryParams);
 
   try {
     params = _.first(JSON.parse(
@@ -27,8 +34,11 @@ router.get('/students', authenticate, (req, res) => {
     console.log(e);
   }
 
-  Student.find(params).then((students) => {
-    res.send({ students });
+  Student.count(params).then((count) => {
+    total = count;
+    return Student.find(params).skip(limit * (page - 1)).limit(limit).exec();
+  }).then((students) => {
+    res.send({ total, page, limit, students });
   }, (e) => {
     res.status(400).send(e);
   });

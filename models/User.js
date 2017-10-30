@@ -60,10 +60,10 @@ class UserClass {
     return _.pick(userObject, ['_id', 'email', 'role', 'profile']);
   }
 
-  createProfile() {
+  createProfile(data) {
     const user = this;
     const RoleClass = { Student };
-    const profile = new RoleClass[user.role](_.pick(user, ['email', 'phone', 'firstname', 'lastname']));
+    const profile = new RoleClass[user.role](_.pick(data, ['email', 'phone', 'firstname', 'lastname']));
 
     return profile.save().then(() => {
       return user.update({ $set: { profile: profile._id }});
