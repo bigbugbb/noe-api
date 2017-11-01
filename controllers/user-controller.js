@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const _ = require('lodash');
 const db = require('../db');
+const crypto = require('crypto');
 const { ObjectID } = require('mongodb');
 const { User } = require('../models/user');
 const { authenticate } = require('../middleware/authenticate');
@@ -31,7 +32,46 @@ router.post('/users/login', (req, res) => {
   const body = _.pick(req.body, ['email', 'password']);
 
   User.findByCredentials(body.email, body.password).then((user) => {
-    return user.generateAuthToken().then((token) => {
+    user.generateAuthToken().then((token) => {
+      res.header('x-auth', token).send(user);
+    });
+  }).catch((e) => {
+    res.status(400).send(e);
+  });
+});
+
+router.post('/users/forgot-password', (req, res) => {
+  User.findOneAndUpdate({ email: req.body.email }, {
+    $set: {
+      resetPasswordToken: crypto.randomBytes(20).toString('hex'),
+      resetPasswordExpires: Date.now() + 3600000
+    }
+  }, { new: true }).then((user) => {
+    user.sendEmailForPasswordReset().then((user) => {
+      res.status(200).send();
+    });
+  }).catch((e) => {
+    res.status(400).send(e);
+  });
+});
+
+router.post('/users/reset-password/:resetPasswordToken', (req, res) => {
+  const password = _.get(req.body, 'password', '');
+  const resetPasswordToken = req.params.resetPasswordToken;
+
+  if (_.isEmpty(password) || _.isEmpty(resetPasswordToken)) {
+    return res.status(404).send();
+  }
+
+  User.findOne({
+    resetPasswordToken,
+    resetPasswordExpires: { $gt: Date.now() }
+  }).populate('profile').then((user) => {
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    user.generateAuthToken().then((token) => {
       res.header('x-auth', token).send(user);
     });
   }).catch((e) => {

@@ -3,6 +3,7 @@ const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 const { Student } = require('./student');
 
 const Schema = mongoose.Schema;
@@ -45,7 +46,9 @@ var UserSchema = new mongoose.Schema({
   profile: {
     type: Schema.ObjectId,
     refPath: 'role'
-  }
+  },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date
 }, {
   timestamps: true,
   retainKeyOrder: true,
@@ -78,6 +81,33 @@ class UserClass {
     user.tokens.push({ access, token });
 
     return user.save().then(() => token);
+  }
+
+  sendEmailForPasswordReset() {
+    const { email, resetPasswordToken } = this;
+
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      auth: {
+        user: 'hacfzha2kmduzch6@ethereal.email',
+        pass: 'ehpTdaMdNdQpB9vErr'
+      }
+    });
+
+    var mailOptions = {
+      to: email,
+      from: 'no-replay@e.noe.com',
+      subject: 'Reset password',
+      text: `
+        You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
+        Please click on the following link, or paste this into your browser to complete the process:\n\n
+        http://localhost:4200/auth/reset-password/${resetPasswordToken}\n\n
+        If you did not request this, please ignore this email and your password will remain unchanged.
+      `
+    };
+
+    return transporter.sendMail(mailOptions);
   }
 
   removeToken(token) {
