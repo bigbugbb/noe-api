@@ -5,6 +5,7 @@ const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const { Student } = require('./student');
+const { School } = require('./school');
 
 const Schema = mongoose.Schema;
 
@@ -65,8 +66,8 @@ class UserClass {
 
   createProfile(data) {
     const user = this;
-    const RoleClass = { Student };
-    const profile = new RoleClass[user.role](_.pick(data, ['email', 'phone', 'firstname', 'lastname']));
+    const RoleClass = { Student, School };
+    const profile = new RoleClass[user.role](_.pick(data, ['email', 'phone']));
 
     return profile.save().then(() => {
       return user.update({ $set: { profile: profile._id }});
