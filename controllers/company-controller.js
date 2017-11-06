@@ -3,24 +3,24 @@ const router = express.Router();
 const _ = require('lodash');
 const db = require('../db');
 const { ObjectID } = require('mongodb');
-const { Activity } = require('../models/activity');
+const { Company } = require('../models/company');
 const { authenticate } = require('../middleware/authenticate');
 
 const defaultPage = 1;
 const defaultLimit = 20;
 const defaultQueryParams = "[{}]";
 
-router.post('/activities', authenticate, (req, res) => {
-  const activity = new Activity(req.body);
+router.post('/companies', authenticate, (req, res) => {
+  const company = new Company(req.body);
 
-  activity.save().then(doc => {
+  company.save().then(doc => {
     res.send(doc);
-  }).catch(e => {
+  }).catch((e) => {
     res.status(400).send(e);
   });
 });
 
-router.get('/activities', authenticate, (req, res) => {
+router.get('/companies', authenticate, (req, res) => {
   let total = 0;
   let page  = _.toInteger(_.get(req, 'query.page', defaultPage));
   let limit = _.toInteger(_.get(req, 'query.limit', defaultLimit));
@@ -32,37 +32,37 @@ router.get('/activities', authenticate, (req, res) => {
     console.log(e);
   }
 
-  Activity.count(params).then(count => {
+  Company.count(params).then(count => {
     total = count;
-    return Activity.find(params).skip(limit * (page - 1)).limit(limit).exec();
-  }).then(activities => {
-    res.send({ total, page, limit, activities });
+    return Company.find(params).skip(limit * (page - 1)).limit(limit).exec();
+  }).then(companies => {
+    res.send({ total, page, limit, companies });
   }, (e) => {
     res.status(400).send(e);
   });
 });
 
-router.get('/activities/:id', authenticate, (req, res) => {
+router.get('/companies/:id', authenticate, (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
-  Activity.findOne({
+  Company.findOne({
     _id: id
-  }).then(activity => {
-    if (!activity) {
+  }).then(company => {
+    if (!company) {
       return res.status(404).send();
     }
 
-    res.send({ activity });
+    res.send({ company });
   }, (e) => {
     res.status(400).send(e);
   });
 });
 
-router.patch('/activities/:id', authenticate, (req, res) => {
+router.patch('/companies/:id', authenticate, (req, res) => {
   const id = req.params.id;
   const body = _.omit(req.body, ['_id']);
 
@@ -70,30 +70,30 @@ router.patch('/activities/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Activity.findByIdAndUpdate({ _id: id }, { $set: body }, { new: true }).then(activity => {
-    if (!activity) {
+  Company.findByIdAndUpdate({ _id: id }, { $set: body }, { new: true }).then(company => {
+    if (!company) {
       return res.status(404).send();
     }
 
-    res.send({ activity });
+    res.send({ company });
   }).catch((e) => {
     res.status(400).send(e);
   });
 });
 
-router.delete('/activities/:id', authenticate, (req, res) => {
+router.delete('/companies/:id', authenticate, (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
-  Activity.findOneAndRemove({ _id: id }).then(activity => {
-    if (!activity) {
+  Company.findOneAndRemove({ _id: id }).then(company => {
+    if (!company) {
       return res.status(404).send();
     }
 
-    res.send({ activity });
+    res.send({ company });
   }).catch((e) => {
     res.status(400).send();
   });

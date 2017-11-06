@@ -9,5 +9,8 @@ app.use(bodyParser.json());
 
 app.use('/api/v1', require('./controllers/user-controller'));
 app.use('/api/v1', require('./controllers/student-controller'));
+app.use('/api/v1', require('./controllers/school-controller'));
+app.use('/api/v1', require('./controllers/activity-controller'));
+app.use('/api/v1', require('./controllers/company-controller'));
 
 module.exports = app;

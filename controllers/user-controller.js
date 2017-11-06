@@ -15,11 +15,11 @@ router.post('/users', (req, res) => {
     return user.createProfile(body);
   }).then(() => {
     return user.generateAuthToken();
-  }).then((token) => {
-    User.findById(user.id).populate('profile').then((user) => {
+  }).then(token => {
+    User.findById(user.id).populate('profile').then(user => {
       res.header('x-auth', token).send(user);
     });
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send(e);
   });
 });
@@ -31,11 +31,11 @@ router.get('/users/me', authenticate, (req, res) => {
 router.post('/users/login', (req, res) => {
   const body = _.pick(req.body, ['email', 'password']);
 
-  User.findByCredentials(body.email, body.password).then((user) => {
-    user.generateAuthToken().then((token) => {
+  User.findByCredentials(body.email, body.password).then(user => {
+    user.generateAuthToken().then(token => {
       res.header('x-auth', token).send(user);
     });
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send(e);
   });
 });
@@ -46,11 +46,11 @@ router.post('/users/forgot-password', (req, res) => {
       resetPasswordToken: crypto.randomBytes(20).toString('hex'),
       resetPasswordExpires: Date.now() + 3600000
     }
-  }, { new: true }).then((user) => {
-    user.sendEmailForPasswordReset().then((user) => {
+  }, { new: true }).then(user => {
+    user.sendEmailForPasswordReset().then(user => {
       res.status(200).send();
     });
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send(e);
   });
 });
@@ -66,15 +66,15 @@ router.post('/users/reset-password/:resetPasswordToken', (req, res) => {
   User.findOne({
     resetPasswordToken,
     resetPasswordExpires: { $gt: Date.now() }
-  }).populate('profile').then((user) => {
+  }).populate('profile').then(user => {
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
-    user.generateAuthToken().then((token) => {
+    user.generateAuthToken().then(token => {
       res.header('x-auth', token).send(user);
     });
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send(e);
   });
 });
@@ -88,9 +88,9 @@ router.delete('/users/me/token', authenticate, (req, res) => {
 });
 
 router.get('/users', (req, res) => {
-  User.find().then((users) => {
+  User.find().then(users => {
     res.send({ users });
-  }, (e) => {
+  }, e => {
     res.status(400).send(e);
   });
 });
@@ -102,13 +102,13 @@ router.get('/users/:id', (req, res) => {
     return res.status(404).send();
   }
 
-  User.findById(id).then((user) => {
+  User.findById(id).then(user => {
     if (!user) {
       return res.status(404).send();
     }
 
     res.send({ user });
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send(e);
   });
 });
@@ -121,9 +121,9 @@ router.delete('/users/:id', function (req, res) {
     return res.status(404).send();
   }
 
-  User.findByIdAndRemove(id).then((user) => {
+  User.findByIdAndRemove(id).then(user => {
     res.send({ user });
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send(e);
   });
 });
@@ -136,9 +136,9 @@ router.put('/users/:id', function (req, res) {
     return res.status(404).send();
   }
 
-  User.findByIdAndUpdate(id).then((user) => {
+  User.findByIdAndUpdate(id).then(user => {
     res.send({ user });
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send(e);
   });
 });

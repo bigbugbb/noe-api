@@ -13,7 +13,7 @@ const defaultQueryParams = "[{}]";
 router.post('/students', authenticate, (req, res) => {
   const student = new Student(req.body);
 
-  student.save().then((doc) => {
+  student.save().then(doc => {
     res.send(doc);
   }).catch((e) => {
     res.status(400).send(e);
@@ -37,7 +37,7 @@ router.get('/students', authenticate, (req, res) => {
   Student.count(params).then((count) => {
     total = count;
     return Student.find(params).skip(limit * (page - 1)).limit(limit).exec();
-  }).then((students) => {
+  }).then(students => {
     res.send({ total, page, limit, students });
   }, (e) => {
     res.status(400).send(e);
@@ -53,7 +53,7 @@ router.get('/students/:id', authenticate, (req, res) => {
 
   Student.findOne({
     _id: id
-  }).then((student) => {
+  }).then(student => {
     if (!student) {
       return res.status(404).send();
     }
@@ -72,7 +72,7 @@ router.patch('/students/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Student.findByIdAndUpdate({ _id: id }, { $set: body }, { new: true }).then((student) => {
+  Student.findByIdAndUpdate({ _id: id }, { $set: body }, { new: true }).then(student => {
     if (!student) {
       return res.status(404).send();
     }
@@ -90,7 +90,7 @@ router.delete('/students/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Student.findOneAndRemove({ _id: id }).then((student) => {
+  Student.findOneAndRemove({ _id: id }).then(student => {
     if (!student) {
       return res.status(404).send();
     }
