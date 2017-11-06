@@ -35,9 +35,9 @@ router.get('/schools', authenticate, (req, res) => {
   School.count(params).then((count) => {
     total = count;
     return School.find(params).skip(limit * (page - 1)).limit(limit).exec();
-  }).then((schools) => {
+  }).then(schools => {
     res.send({ total, page, limit, schools });
-  }, (e) => {
+  }, e => {
     res.status(400).send(e);
   });
 });
@@ -49,9 +49,7 @@ router.get('/schools/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  School.findOne({
-    _id: id
-  }).then((school) => {
+  School.findOne({ _id: id }).then(school => {
     if (!school) {
       return res.status(404).send();
     }
@@ -88,13 +86,13 @@ router.delete('/schools/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  School.findOneAndRemove({ _id: id }).then((school) => {
+  School.findOneAndRemove({ _id: id }).then(school => {
     if (!school) {
       return res.status(404).send();
     }
 
     res.send({ school });
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send();
   });
 });

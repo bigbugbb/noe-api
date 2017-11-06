@@ -17,7 +17,7 @@ var CompanySchema = new mongoose.Schema({
   },
   phone: { type: String, trim: true },
   country: { type: String, trim: true },
-  introduction: { type: String, trim: true, default: 'Enter your self-introduction.' },
+  introduction: { type: String, trim: true, default: 'Your company introduction.' },
   activities: [{ type: Schema.ObjectId, ref: 'Activity' }],
   services: [{ type: Schema.ObjectId, ref: 'Service' }]
 }, {

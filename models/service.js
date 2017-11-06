@@ -4,7 +4,7 @@ const _ = require('lodash');
 
 var Schema = mongoose.Schema;
 
-var ActivitySchema = new mongoose.Schema({
+var ServiceSchema = new mongoose.Schema({
   companyId: { type: Schema.ObjectId, index: true },
   avatar: { type: String, trim: true, required: true },
   name: { type: String, trim: true, required: true },
@@ -12,9 +12,6 @@ var ActivitySchema = new mongoose.Schema({
   summary: { type: String, trim: true, required: true },
   media: [{ type: String, trim: true }],
   price: { type: Number, required: true },
-  startTime: { type: Date, required: true },
-  stopTime: { type: Date, required: true },
-  itinerary: { type: String },
   email: {
     type: String, trim: true, minlength: 3,
     validate: {
@@ -28,6 +25,6 @@ var ActivitySchema = new mongoose.Schema({
   retainKeyOrder: true
 });
 
-var Activity = mongoose.model('Activity', ActivitySchema);
+var Service = mongoose.model('Service', ServiceSchema);
 
-module.exports = { Activity };
+module.exports = { Service };

@@ -49,15 +49,13 @@ router.get('/activities/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Activity.findOne({
-    _id: id
-  }).then(activity => {
+  Activity.findOne({ _id: id }).then(activity => {
     if (!activity) {
       return res.status(404).send();
     }
 
     res.send({ activity });
-  }, (e) => {
+  }, e => {
     res.status(400).send(e);
   });
 });

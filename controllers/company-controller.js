@@ -15,7 +15,7 @@ router.post('/companies', authenticate, (req, res) => {
 
   company.save().then(doc => {
     res.send(doc);
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send(e);
   });
 });
@@ -37,7 +37,7 @@ router.get('/companies', authenticate, (req, res) => {
     return Company.find(params).skip(limit * (page - 1)).limit(limit).exec();
   }).then(companies => {
     res.send({ total, page, limit, companies });
-  }, (e) => {
+  }, e => {
     res.status(400).send(e);
   });
 });
@@ -49,9 +49,7 @@ router.get('/companies/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Company.findOne({
-    _id: id
-  }).then(company => {
+  Company.findOne({ _id: id }).then(company => {
     if (!company) {
       return res.status(404).send();
     }
@@ -76,7 +74,7 @@ router.patch('/companies/:id', authenticate, (req, res) => {
     }
 
     res.send({ company });
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send(e);
   });
 });
@@ -94,7 +92,7 @@ router.delete('/companies/:id', authenticate, (req, res) => {
     }
 
     res.send({ company });
-  }).catch((e) => {
+  }).catch(e => {
     res.status(400).send();
   });
 });
