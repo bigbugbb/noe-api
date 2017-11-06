@@ -12,6 +12,7 @@ var ServiceSchema = new mongoose.Schema({
   summary: { type: String, trim: true, required: true },
   media: [{ type: String, trim: true }],
   price: { type: Number, required: true },
+  // contact info
   email: {
     type: String, trim: true, minlength: 3,
     validate: {

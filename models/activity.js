@@ -15,6 +15,7 @@ var ActivitySchema = new mongoose.Schema({
   startTime: { type: Date, required: true },
   stopTime: { type: Date, required: true },
   itinerary: { type: String },
+  // contact info
   email: {
     type: String, trim: true, minlength: 3,
     validate: {

@@ -8,7 +8,7 @@ const { User } = require('../models/user');
 const { authenticate } = require('../middleware/authenticate');
 
 router.post('/users', (req, res) => {
-  const body = _.pick(req.body, ['email', 'phone', 'password', 'role', 'firstname', 'lastname']);
+  const body = _.pick(req.body, ['email', 'phone', 'password', 'role']);
   const user = new User(body);
 
   user.save().then(() => {
@@ -102,7 +102,7 @@ router.get('/users/:id', (req, res) => {
     return res.status(404).send();
   }
 
-  User.findById(id).then(user => {
+  User.findById(id).populate('profile').then(user => {
     if (!user) {
       return res.status(404).send();
     }
@@ -136,7 +136,7 @@ router.put('/users/:id', function (req, res) {
     return res.status(404).send();
   }
 
-  User.findByIdAndUpdate(id).then(user => {
+  User.findByIdAndUpdate(id).populate('profile').then(user => {
     res.send({ user });
   }).catch(e => {
     res.status(400).send(e);
