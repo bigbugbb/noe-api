@@ -5,7 +5,7 @@ const _ = require('lodash');
 var Schema = mongoose.Schema;
 
 var ActivitySchema = new mongoose.Schema({
-  companyId: { type: Schema.ObjectId, index: true },
+  ownerId: { type: Schema.ObjectId, ref: 'Company', index: true },
   avatar: { type: String, trim: true, required: true },
   name: { type: String, trim: true, required: true },
   type: { type: String, trim: true, required: true },
