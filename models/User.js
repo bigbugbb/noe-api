@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const { Student } = require('./student');
 const { School } = require('./school');
+const { Company } = require('./company');
 
 const Schema = mongoose.Schema;
 
@@ -66,7 +67,7 @@ class UserClass {
 
   createProfile(data) {
     const user = this;
-    const RoleClass = { Student, School };
+    const RoleClass = { Student, School, Company };
     const profile = new RoleClass[user.role](_.pick(data, ['email', 'phone']));
 
     return profile.save().then(() => {

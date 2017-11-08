@@ -12,6 +12,6 @@ app.use('/api/v1', require('./controllers/student-controller'));
 app.use('/api/v1', require('./controllers/school-controller'));
 app.use('/api/v1', require('./controllers/company-controller'));
 app.use('/api/v1', require('./controllers/activity-controller'));
-app.use('/api/v1', require('./controllers/service-controller'));
+app.use('/api/v1', require('./controllers/business-controller'));
 
 module.exports = app;
