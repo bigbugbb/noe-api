@@ -4,14 +4,15 @@ const app = express();
 const cors = require('./middleware/cors');
 const bodyParser = require('body-parser');
 
+const models = [
+  'user', 'student', 'school', 'company', 'business'
+];
+
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use('/api/v1', require('./controllers/user-controller'));
-app.use('/api/v1', require('./controllers/student-controller'));
-app.use('/api/v1', require('./controllers/school-controller'));
-app.use('/api/v1', require('./controllers/company-controller'));
-app.use('/api/v1', require('./controllers/activity-controller'));
-app.use('/api/v1', require('./controllers/business-controller'));
+models.forEach(model => {
+  app.use('/api/v1', require(`./controllers/${model}-controller`));
+});
 
 module.exports = app;

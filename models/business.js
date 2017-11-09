@@ -10,7 +10,6 @@ var BusinessSchema = new mongoose.Schema({
   name: { type: String, trim: true },
   type: { type: String, trim: true },
   summary: { type: String, trim: true },
-  media: [{ type: String, trim: true }],
   price: { type: Number },
   // contact info
   email: {

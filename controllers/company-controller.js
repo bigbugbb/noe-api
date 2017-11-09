@@ -34,7 +34,11 @@ router.get('/companies', authenticate, (req, res) => {
 
   Company.count(params).then(count => {
     total = count;
-    return Company.find(params).skip(limit * (page - 1)).limit(limit).exec();
+    return Company.find(params)
+      .populate('businesses')
+      .skip(limit * (page - 1))
+      .limit(limit)
+      .exec();
   }).then(companies => {
     res.send({ total, page, limit, companies });
   }, e => {
@@ -49,15 +53,18 @@ router.get('/companies/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Company.findOne({ _id: id }).then(company => {
-    if (!company) {
-      return res.status(404).send();
-    }
+  Company
+    .findOne({ _id: id })
+    .populate('businesses')
+    .then(company => {
+      if (!company) {
+        return res.status(404).send();
+      }
 
-    res.send({ company });
-  }, (e) => {
-    res.status(400).send(e);
-  });
+      res.send({ company });
+    }, (e) => {
+      res.status(400).send(e);
+    });
 });
 
 router.patch('/companies/:id', authenticate, (req, res) => {
@@ -68,15 +75,18 @@ router.patch('/companies/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Company.findByIdAndUpdate({ _id: id }, { $set: body }, { new: true }).then(company => {
-    if (!company) {
-      return res.status(404).send();
-    }
+  Company
+    .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
+    .populate('businesses')
+    .then(company => {
+      if (!company) {
+        return res.status(404).send();
+      }
 
-    res.send({ company });
-  }).catch(e => {
-    res.status(400).send(e);
-  });
+      res.send({ company });
+    }).catch(e => {
+      res.status(400).send(e);
+    });
 });
 
 router.delete('/companies/:id', authenticate, (req, res) => {

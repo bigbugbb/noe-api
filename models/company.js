@@ -10,7 +10,6 @@ var CompanySchema = new mongoose.Schema({
   name: { type: String, trim: true },
   country: { type: String, trim: true },
   introduction: { type: String, trim: true, default: 'Your company introduction.' },
-  activities: [{ type: Schema.ObjectId, ref: 'Activity' }],
   businesses: [{ type: Schema.ObjectId, ref: 'Business' }],
   // contact info
   email: {
