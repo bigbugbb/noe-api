@@ -136,8 +136,7 @@ class UserClass {
       '_id': decoded._id,
       'tokens.token': token,
       'tokens.access': 'auth'
-    })
-    .populate('profile');
+    }).populate('profile');
   }
 
   static findByCredentials(email, password) {

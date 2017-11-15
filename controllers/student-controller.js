@@ -36,7 +36,12 @@ router.get('/students', authenticate, (req, res) => {
 
   Student.count(params).then((count) => {
     total = count;
-    return Student.find(params).skip(limit * (page - 1)).limit(limit).exec();
+    return Student
+      .find(params)
+      .skip(limit * (page - 1))
+      .limit(limit)
+      .populate('orders')
+      .exec();
   }).then(students => {
     res.send({ total, page, limit, students });
   }, (e) => {
@@ -51,7 +56,7 @@ router.get('/students/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Student.findOne({ _id: id }).then(student => {
+  Student.findOne({ _id: id }).populate('orders').then(student => {
     if (!student) {
       return res.status(404).send();
     }
@@ -70,15 +75,18 @@ router.patch('/students/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Student.findByIdAndUpdate({ _id: id }, { $set: body }, { new: true }).then(student => {
-    if (!student) {
-      return res.status(404).send();
-    }
+  Student
+    .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
+    .populate('orders')
+    .then(student => {
+      if (!student) {
+        return res.status(404).send();
+      }
 
-    res.send({ student });
-  }).catch((e) => {
-    res.status(400).send(e);
-  });
+      res.send({ student });
+    }).catch((e) => {
+      res.status(400).send(e);
+    });
 });
 
 router.delete('/students/:id', authenticate, (req, res) => {

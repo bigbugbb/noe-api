@@ -7,7 +7,7 @@ const { Student } = require('../models/student');
 const { Business } = require('../models/business');
 const { Order } = require('../models/order');
 const { authenticate } = require('../middleware/authenticate');
-const stripe = require('stripe')(process.env.STRIPE_API_KEY);
+// const stripe = require('stripe')(process.env.STRIPE_API_KEY);
 
 const defaultPage = 1;
 const defaultLimit = 20;
@@ -15,23 +15,22 @@ const defaultQueryParams = "[{}]";
 
 router.post('/orders', authenticate, (req, res) => {
   const { studentId, businessId } = req.body;
-  let student, business;
 
-  Promise.all([
-    Student.findById(studentId), Business.findById(businessId)
-  ]).then(values => {
-    student = values[0]; business = values[1];
-    return new Order({
-      student: studentId, business: businessId, status: 'created'
-    }).save();
-  }).then(doc => {
-    student.orders.push(doc); business.orders.push(doc);
-    return Promise.all([ doc, student.save(), business.save() ]);
+  Order.create({
+    student: studentId, business: businessId, status: 'created'
+  }).then(order => {
+    const studentUpdate = Student
+      .findByIdAndUpdate({ _id: studentId }, { $push: { orders: order } }, { new: true })
+      .populate('orders');
+    const businessUpdate = Business
+      .findByIdAndUpdate({ _id: businessId }, { $push: { orders: order } }, { new: true })
+      .populate('orders');
+    return Promise.all([ order, studentUpdate, businessUpdate ]);
   }).then(values => {
-    let doc = values[0];
-    doc.student = values[1];
-    doc.business = values[2];
-    res.send(doc);
+    let order = values[0];
+    order.student = values[1];
+    order.business = values[2];
+    res.send(order);
   }).catch(e => {
     res.status(400).send(e);
   });
@@ -51,7 +50,13 @@ router.get('/orders', authenticate, (req, res) => {
 
   Order.count(params).then((count) => {
     total = count;
-    return Order.find(params).skip(limit * (page - 1)).limit(limit).exec();
+    return Order
+      .find(params)
+      .skip(limit * (page - 1))
+      .limit(limit)
+      .populate('student')
+      .populate('business')
+      .exec();
   }).then(orders => {
     res.send({ total, page, limit, orders });
   }, e => {
@@ -66,15 +71,19 @@ router.get('/orders/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Order.findOne({ _id: id }).then(order => {
-    if (!order) {
-      return res.status(404).send();
-    }
+  Order
+    .findOne({ _id: id })
+    .populate('student')
+    .populate('business')
+    .then(order => {
+      if (!order) {
+        return res.status(404).send();
+      }
 
-    res.send({ order });
-  }, (e) => {
-    res.status(400).send(e);
-  });
+      res.send({ order });
+    }, e => {
+      res.status(400).send(e);
+    });
 });
 
 router.patch('/orders/:id', authenticate, (req, res) => {
@@ -85,15 +94,19 @@ router.patch('/orders/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Order.findByIdAndUpdate({ _id: id }, { $set: body }, { new: true }).then((order) => {
-    if (!order) {
-      return res.status(404).send();
-    }
+  Order
+    .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
+    .populate('student')
+    .populate('business')
+    .then(order => {
+      if (!order) {
+        return res.status(404).send();
+      }
 
-    res.send({ order });
-  }).catch((e) => {
-    res.status(400).send(e);
-  });
+      res.send({ order });
+    }).catch(e => {
+      res.status(400).send(e);
+    });
 });
 
 // router.delete('/orders/:id', authenticate, (req, res) => {
