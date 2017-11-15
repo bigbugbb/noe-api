@@ -42,7 +42,9 @@ var StudentSchema = new mongoose.Schema({
   preferredAccommodation: { type: String, trim: true },
   // skills and interests
   skills: [{ type: String, trim: true }],
-  interests: [{ type: String, trim: true }]
+  interests: [{ type: String, trim: true }],
+  // business booked info
+  orders: [{ type: Schema.ObjectId, ref: 'Order' }]
 }, {
   timestamps: true,
   retainKeyOrder: true

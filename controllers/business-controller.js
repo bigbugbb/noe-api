@@ -34,7 +34,12 @@ router.get('/businesses', authenticate, (req, res) => {
 
   Business.count(params).then(count => {
     total = count;
-    return Business.find(params).skip(limit * (page - 1)).limit(limit).exec();
+    return Business
+      .find(params)
+      .skip(limit * (page - 1))
+      .limit(limit)
+      .populate('orders')
+      .exec();
   }).then(businesses => {
     res.send({ total, page, limit, businesses });
   }, (e) => {
@@ -49,7 +54,7 @@ router.get('/businesses/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Business.findOne({ _id: id }).then(business => {
+  Business.findOne({ _id: id }).populate('orders').then(business => {
     if (!business) {
       return res.status(404).send();
     }
@@ -68,15 +73,18 @@ router.patch('/businesses/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Business.findByIdAndUpdate({ _id: id }, { $set: body }, { new: true }).then(business => {
-    if (!business) {
-      return res.status(404).send();
-    }
+  Business
+    .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
+    .populate('orders')
+    .then(business => {
+      if (!business) {
+        return res.status(404).send();
+      }
 
-    res.send({ business });
-  }).catch((e) => {
-    res.status(400).send(e);
-  });
+      res.send({ business });
+    }).catch(e => {
+      res.status(400).send(e);
+    });
 });
 
 router.delete('/businesses/:id', authenticate, (req, res) => {

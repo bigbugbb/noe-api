@@ -2,11 +2,13 @@
   "test": {
     "PORT": 3000,
     "MONGODB_URI": "mongodb://localhost:27017/noe-app-test",
-    "JWT_SECRET": "poijasdf98435jpgfdpoij3"
+    "JWT_SECRET": "poijasdf98435jpgfdpoij3",
+    "STRIPE_API_KEY": "sk_test_8EbSvbjheqBc8UXlt9anyFUT"
   },
   "development": {
     "PORT": 3000,
     "MONGODB_URI": "mongodb://localhost:27017/noe-app",
-    "JWT_SECRET": "pojiaj234oi234oij234oij4"
+    "JWT_SECRET": "pojiaj234oi234oij234oij4",
+    "STRIPE_API_KEY": "sk_test_8EbSvbjheqBc8UXlt9anyFUT"
   }
 }
