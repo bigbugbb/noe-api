@@ -5,10 +5,12 @@ const _ = require('lodash');
 var Schema = mongoose.Schema;
 
 var OrderSchema = new mongoose.Schema({
-  student: { type: Schema.ObjectId, ref: 'Student', index: true },
+  customer: { type: Schema.ObjectId, ref: 'User', index: true },
   business: { type: Schema.ObjectId, ref: 'Business', index: true },
-  stripeCharge: { type: String, trim: true },
-  status: { type: String, enum: ['created', 'cancelled', 'paid', 'refunded'], trim: true }
+  price: { type: Number, min: 0, max: 100000000 },
+  charge: { type: String, trim: true },
+  refund: { type: String, trim: true },
+  status: { type: String, enum: ['created', 'paid', 'canceled', 'refunded'], trim: true }
 }, {
   timestamps: true,
   retainKeyOrder: true

@@ -23,7 +23,8 @@ var StudentSchema = new mongoose.Schema({
   country: { type: String, trim: true },
   birthday: { type: String, trim: true },
   gpa: { type: Number, min: 0 },
-  introduction: { type: String, trim: true, default: 'Enter your self-introduction.' },
+  introduction: { type: String, trim: true, default: 'This is the self-introduction.' },
+  aboutMe: { type: String, trim: true, default: 'More about myself.' },
   applying: { type: String, trim: true },
   budget: { type: Number, min: 0, max: 10000000, default: 20000 },
   // Standardized test scores
@@ -43,8 +44,6 @@ var StudentSchema = new mongoose.Schema({
   // skills and interests
   skills: [{ type: String, trim: true }],
   interests: [{ type: String, trim: true }],
-  // business booked info
-  orders: [{ type: Schema.ObjectId, ref: 'Order' }]
 }, {
   timestamps: true,
   retainKeyOrder: true

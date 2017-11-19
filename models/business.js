@@ -13,7 +13,7 @@ var BusinessSchema = new mongoose.Schema({
   state: { type: String, trim: true },
   country: { type: String, trim: true },
   summary: { type: String, trim: true },
-  price: { type: Number },
+  price: { type: Number, min: 0, max: 100000000 },
   currency: { type: String, default: 'usd' },
   content: { type: String, trim: true },
   orders: [{ type: Schema.ObjectId, ref: 'Order' }],
