@@ -62,7 +62,7 @@ router.post('/orders/:id/charges', authenticate, (req, res) => {
         metadata: { order: id }
       });
     }).then(charge => {
-      doc.stripeCharge = charge.id;
+      doc.charge = charge.id;
       doc.status = 'paid';
       return doc.save();
     }).then(order => {

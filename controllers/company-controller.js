@@ -35,7 +35,6 @@ router.get('/companies', authenticate, (req, res) => {
   Company.count(params).then(count => {
     total = count;
     return Company.find(params)
-      .populate('businesses')
       .skip(limit * (page - 1))
       .limit(limit)
       .exec();
@@ -55,7 +54,6 @@ router.get('/companies/:id', authenticate, (req, res) => {
 
   Company
     .findOne({ _id: id })
-    .populate('businesses')
     .then(company => {
       if (!company) {
         return res.status(404).send();
@@ -77,7 +75,6 @@ router.patch('/companies/:id', authenticate, (req, res) => {
 
   Company
     .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
-    .populate('businesses')
     .then(company => {
       if (!company) {
         return res.status(404).send();

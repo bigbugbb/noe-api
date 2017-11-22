@@ -15,7 +15,6 @@ var CompanySchema = new mongoose.Schema({
   zipcode: { type: String, trim: true },
   country: { type: String, trim: true },
   introduction: { type: String, trim: true, default: 'Your company introduction.' },
-  businesses: [{ type: Schema.ObjectId, ref: 'Business' }],
   // contact info
   email: {
     type: String, required: true, trim: true, minlength: 3, unique: true,
