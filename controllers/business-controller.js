@@ -8,7 +8,7 @@ const { authenticate } = require('../middleware/authenticate');
 
 const defaultPage = 1;
 const defaultLimit = 20;
-const defaultQueryParams = "[{}]";
+const defaultQueryParams = JSON.stringify([{ status: 'active' }]);
 
 router.post('/businesses', authenticate, (req, res) => {
   const business = new Business(req.body);

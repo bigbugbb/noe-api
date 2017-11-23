@@ -17,6 +17,13 @@ var BusinessSchema = new mongoose.Schema({
   currency: { type: String, default: 'usd' },
   content: { type: String, trim: true },
   orders: [{ type: Schema.ObjectId, ref: 'Order' }],
+  status: {
+    type: String,
+    enum: ['draft', 'active', 'inactive'],
+    default: 'draft',
+    index: true,
+    required: true
+  },
   email: {
     type: String, trim: true, minlength: 3,
     validate: {
