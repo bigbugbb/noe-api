@@ -7,55 +7,50 @@ const { ObjectID } = require('mongodb');
 const { User } = require('../models/user');
 const { authenticate } = require('../middleware/authenticate');
 
-router.post('/users', (req, res) => {
+router.post('/users', async (req, res) => {
   const body = _.pick(req.body, ['email', 'phone', 'password', 'role']);
-  const user = new User(body);
 
-  user.save().then(() => {
-    return user.createProfile(body);
-  }).then(() => {
-    return user.generateAuthToken();
-  }).then(token => {
-    User.findById(user.id).populate('profile').then(user => {
-      res.header('x-auth', token).send(user);
-    });
-  }).catch(e => {
+  try {
+    let user = await new User(body).save();
+    await user.createProfile(body);
+    const token = await user.generateAuthToken();
+    user = await User.findById(user.id).populate('profile');
+    res.header('x-auth', token).send(user);
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.get('/users/me', authenticate, (req, res) => {
-  res.send(req.user);
-});
-
-router.post('/users/login', (req, res) => {
+router.post('/users/login', async (req, res) => {
   const body = _.pick(req.body, ['email', 'password']);
-
-  User.findByCredentials(body.email, body.password).then(user => {
-    user.generateAuthToken().then(token => {
-      res.header('x-auth', token).send(user);
-    });
-  }).catch(e => {
+  try {
+    const user = await User.findByCredentials(body.email, body.password);
+    const token = await user.generateAuthToken();
+    res.header('x-auth', token).send(user);
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.post('/users/forgot-password', (req, res) => {
-  User.findOneAndUpdate({ email: req.body.email }, {
-    $set: {
-      resetPasswordToken: crypto.randomBytes(20).toString('hex'),
-      resetPasswordExpires: Date.now() + 3600000
-    }
-  }, { new: true }).then(user => {
-    user.sendEmailForPasswordReset().then(user => {
-      res.status(200).send();
-    });
-  }).catch(e => {
+router.post('/users/forgot-password', async (req, res) => {
+  try {
+    let user = await User.findOneAndUpdate(
+      { email: req.body.email },
+      { $set: {
+          resetPasswordToken: crypto.randomBytes(20).toString('hex'),
+          resetPasswordExpires: Date.now() + 3600000
+        }
+      },
+      { new: true }
+    );
+    user = await user.sendEmailForPasswordReset();
+    res.status(200).send();
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.post('/users/reset-password/:resetPasswordToken', (req, res) => {
+router.post('/users/reset-password/:resetPasswordToken', async (req, res) => {
   const password = _.get(req.body, 'password', '');
   const resetPasswordToken = req.params.resetPasswordToken;
 
@@ -63,84 +58,87 @@ router.post('/users/reset-password/:resetPasswordToken', (req, res) => {
     return res.status(404).send();
   }
 
-  User.findOne({
-    resetPasswordToken,
-    resetPasswordExpires: { $gt: Date.now() }
-  }).populate('profile').then(user => {
+  try {
+    const user = await User.findOne({
+      resetPasswordToken, resetPasswordExpires: { $gt: Date.now() }
+    }).populate('profile');
+
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
+    const token = await user.generateAuthToken();
 
-    user.generateAuthToken().then(token => {
-      res.header('x-auth', token).send(user);
-    });
-  }).catch(e => {
+    res.header('x-auth', token).send(user);
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.delete('/users/me/token', authenticate, (req, res) => {
-  req.user.removeToken(req.token).then(() => {
+router.delete('/users/me/token', authenticate, async (req, res) => {
+  try {
+    await req.user.removeToken(req.token);
     res.status(200).send();
-  }, () => {
-    res.status(400).send();
-  });
-});
-
-router.get('/users', (req, res) => {
-  User.find().then(users => {
-    res.send({ users });
-  }, e => {
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.get('/users/:id', (req, res) => {
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.find();
+    res.send({ users });
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+router.get('/users/:id', async (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
-  User.findById(id).populate('profile').then(user => {
+  try {
+    const user = await User.findById(id).populate('profile');
     if (!user) {
       return res.status(404).send();
     }
 
     res.send({ user });
-  }).catch(e => {
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-// DELETES A USER FROM THE DATABASE
-router.delete('/users/:id', function (req, res) {
+router.delete('/users/:id', async (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
-  User.findByIdAndRemove(id).then(user => {
+  try {
+    const user = await User.findByIdAndRemove(id);
     res.send({ user });
-  }).catch(e => {
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-// UPDATES A SINGLE USER IN THE DATABASE
-router.put('/users/:id', function (req, res) {
+router.put('/users/:id', async (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
-  User.findByIdAndUpdate(id).populate('profile').then(user => {
+  try {
+    const user = await User.findByIdAndUpdate(id).populate('profile');
     res.send({ user });
-  }).catch(e => {
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
 module.exports = router;

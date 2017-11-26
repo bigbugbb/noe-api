@@ -11,32 +11,27 @@ const stripe = require('stripe')(process.env.STRIPE_API_KEY);
 
 const defaultPage = 1;
 const defaultLimit = 20;
-const defaultQueryParams = "[{}]";
 
-router.post('/orders', authenticate, (req, res) => {
+router.post('/orders', authenticate, async (req, res) => {
   const { customerId, businessId, price } = req.body;
 
-  Order.create({
-    customer: customerId, business: businessId, price, status: 'created'
-  }).then(order => {
-    const businessUpdate = Business
+  try {
+    const order = await Order.create({
+      customer: customerId, business: businessId, price, status: 'created'
+    });
+    order.business = await Business
       .findByIdAndUpdate({ _id: businessId }, { $push: { orders: order } }, { new: true })
       .populate('orders');
-    return Promise.all([ order, businessUpdate ]);
-  }).then(values => {
-    let order = values[0];
-    order.business = values[1];
     res.send(order);
-  }).catch(e => {
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.post('/orders/:id/charges', authenticate, (req, res) => {
+router.post('/orders/:id/charges', authenticate, async (req, res) => {
   const id = req.params.id;
   const source = _.get(req.body, 'source', '');
   const email = _.get(req.body, 'email', '');
-  let doc;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
@@ -46,33 +41,30 @@ router.post('/orders/:id/charges', authenticate, (req, res) => {
     return res.status(400).send();
   }
 
-  Order
-    .findById(id)
-    .populate('business').then(order => {
-      if (!order) {
-        return res.status(404).send();
-      }
-      doc = order;
+  try {
+    let order = await Order.findById(id).populate('business');
+    if (!order) {
+      return res.status(404).send();
+    }
 
-      return stripe.charges.create({
-        source,
-        amount: order.business.price,
-        currency: order.business.currency,
-        description: "Charge for " + email,
-        metadata: { order: id }
-      });
-    }).then(charge => {
-      doc.charge = charge.id;
-      doc.status = 'paid';
-      return doc.save();
-    }).then(order => {
-      res.send({ order });
-    }, (e) => {
-      res.status(400).send(e);
+    const charge = await stripe.charges.create({
+      source,
+      amount: order.business.price,
+      currency: order.business.currency,
+      description: "Charge for " + email,
+      metadata: { order: id }
     });
+    order.charge = charge.id;
+    order.status = 'paid';
+    order = await order.save();
+
+    res.send({ order });
+  } catch (e) {
+    res.status(400).send(e);
+  }
 });
 
-router.post('/orders/:id/charges/:chargeId/refunds', authenticate, (req, res) => {
+router.post('/orders/:id/charges/:chargeId/refunds', authenticate, async (req, res) => {
   const id = req.params.id;
   const chargeId = req.params.chargeId;
 
@@ -80,69 +72,63 @@ router.post('/orders/:id/charges/:chargeId/refunds', authenticate, (req, res) =>
     return res.status(404).send();
   }
 
-  stripe.refunds.create({
-    charge: chargeId, metadata: { order: id }
-  }).then(refund => {
+  try {
+    const refund = await stripe.refunds.create({
+      charge: chargeId, metadata: { order: id }
+    });
     const update = { refund: refund.id, status: 'refunded' };
-    return Order
+    const order = await Order
       .findByIdAndUpdate({ _id: id }, { $set: update }, { new: true })
       .populate('business');
-  }).then(order => {
     res.send({ order });
-  }, (e) => {
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.get('/orders', authenticate, (req, res) => {
-  let total = 0;
-  let page  = _.toInteger(_.get(req, 'query.page', defaultPage));
-  let limit = _.toInteger(_.get(req, 'query.limit', defaultLimit));
-  let params = _.get(req, 'query.params', defaultQueryParams);
+router.get('/orders', authenticate, async (req, res) => {
+  let query = _.get(req, 'query', {});
+  let page  = _.toInteger(_.get(query, 'page', defaultPage));
+  let limit = _.toInteger(_.get(query, 'limit', defaultLimit));
+  let owner = _.get(query, 'owner', '');
+  let skip = limit * (page - 1);
+
+  query = _.omit(query, ['page', 'limit', 'owner']);
 
   try {
-    params = _.first(JSON.parse(params));
-  } catch (e) {
-    console.log(e);
-  }
-
-  Order.count(params).then((count) => {
-    total = count;
-    return Order
-      .find(params)
-      .skip(limit * (page - 1))
-      .limit(limit)
-      .populate('business')
-      .exec();
-  }).then(orders => {
+    if (!_.isEmpty(owner)) {
+      const values = await Business.find({ owner }).select('_id');
+      _.set(query, 'business', { $in: values });
+    }
+    const total = await Order.count(query);
+    const orders = await Order.find(query).skip(skip).limit(limit)
+      .populate({ path: 'customer', populate: { path: 'profile' } })
+      .populate('business');
     res.send({ total, page, limit, orders });
-  }, e => {
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.get('/orders/:id', authenticate, (req, res) => {
+router.get('/orders/:id', authenticate, async (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
-  Order
-    .findOne({ _id: id })
-    .populate('business')
-    .then(order => {
-      if (!order) {
-        return res.status(404).send();
-      }
-
-      res.send({ order });
-    }, e => {
-      res.status(400).send(e);
-    });
+  try {
+    const order = await Order.findById(id).populate('business');
+    if (!order) {
+      return res.status(404).send();
+    }
+    res.send({ order });
+  } catch (e) {
+    res.status(400).send(e);
+  }
 });
 
-router.patch('/orders/:id', authenticate, (req, res) => {
+router.patch('/orders/:id', authenticate, async (req, res) => {
   const id = req.params.id;
   const body = _.omit(req.body, ['_id']);
 
@@ -150,36 +136,17 @@ router.patch('/orders/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Order
-    .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
-    .populate('business')
-    .then(order => {
-      if (!order) {
-        return res.status(404).send();
-      }
-
-      res.send({ order });
-    }).catch(e => {
-      res.status(400).send(e);
-    });
+  try {
+    const order = await Order
+      .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
+      .populate('business');
+    if (!order) {
+      return res.status(404).send();
+    }
+    res.send({ order });
+  } catch (e) {
+    res.status(400).send(e);
+  }
 });
-
-// router.delete('/orders/:id', authenticate, (req, res) => {
-//   const id = req.params.id;
-
-//   if (!ObjectID.isValid(id)) {
-//     return res.status(404).send();
-//   }
-
-//   Order.findOneAndRemove({ _id: id }).then(order => {
-//     if (!order) {
-//       return res.status(404).send();
-//     }
-
-//     res.send({ order });
-//   }).catch(e => {
-//     res.status(400).send();
-//   });
-// });
 
 module.exports = router;
