@@ -10,21 +10,22 @@ const defaultPage = 1;
 const defaultLimit = 20;
 const defaultQueryParams = "[{}]";
 
-router.post('/companies', authenticate, (req, res) => {
-  const company = new Company(req.body);
+router.post('/companies', authenticate, async (req, res) => {
+  let company = new Company(req.body);
 
-  company.save().then(doc => {
-    res.send(doc);
-  }).catch(e => {
+  try {
+    company = await company.save();
+    res.send(company);
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.get('/companies', authenticate, (req, res) => {
-  let total = 0;
+router.get('/companies', authenticate, async (req, res) => {
   let page  = _.toInteger(_.get(req, 'query.page', defaultPage));
   let limit = _.toInteger(_.get(req, 'query.limit', defaultLimit));
   let params = _.get(req, 'query.params', defaultQueryParams);
+  let skip = limit * (page - 1);
 
   try {
     params = _.first(JSON.parse(params));
@@ -32,40 +33,35 @@ router.get('/companies', authenticate, (req, res) => {
     console.log(e);
   }
 
-  Company.count(params).then(count => {
-    total = count;
-    return Company.find(params)
-      .skip(limit * (page - 1))
-      .limit(limit)
-      .exec();
-  }).then(companies => {
+  try {
+    const total = await Company.count(params);
+    const companies = await Company.find(params).skip(skip).limit(limit);
     res.send({ total, page, limit, companies });
-  }, e => {
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.get('/companies/:id', authenticate, (req, res) => {
+router.get('/companies/:id', authenticate, async (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
-  Company
-    .findOne({ _id: id })
-    .then(company => {
-      if (!company) {
-        return res.status(404).send();
-      }
+  try {
+    const company = await Company.findById(id);
+    if (!company) {
+      return res.status(404).send();
+    }
 
-      res.send({ company });
-    }, (e) => {
-      res.status(400).send(e);
-    });
+    res.send({ company });
+  } catch (e) {
+    res.status(400).send(e);
+  }
 });
 
-router.patch('/companies/:id', authenticate, (req, res) => {
+router.patch('/companies/:id', authenticate, async (req, res) => {
   const id = req.params.id;
   const body = _.omit(req.body, ['_id']);
 
@@ -73,35 +69,36 @@ router.patch('/companies/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Company
-    .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
-    .then(company => {
-      if (!company) {
-        return res.status(404).send();
-      }
+  try {
+    const company = await Company
+      .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true });
+    if (!company) {
+      return res.status(404).send();
+    }
 
-      res.send({ company });
-    }).catch(e => {
-      res.status(400).send(e);
-    });
+    res.send({ company });
+  } catch (e) {
+    res.status(400).send(e);
+  }
 });
 
-router.delete('/companies/:id', authenticate, (req, res) => {
+router.delete('/companies/:id', authenticate, async (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
-  Company.findOneAndRemove({ _id: id }).then(company => {
+  try {
+    const company = await Company.findOneAndRemove({ _id: id });
     if (!company) {
       return res.status(404).send();
     }
 
     res.send({ company });
-  }).catch(e => {
+  } catch (e) {
     res.status(400).send();
-  });
+  }
 });
 
 module.exports = router;

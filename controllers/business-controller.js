@@ -10,21 +10,22 @@ const defaultPage = 1;
 const defaultLimit = 20;
 const defaultQueryParams = JSON.stringify([{ status: 'active' }]);
 
-router.post('/businesses', authenticate, (req, res) => {
-  const business = new Business(req.body);
+router.post('/businesses', authenticate, async (req, res) => {
+  let business = new Business(req.body);
 
-  business.save().then(doc => {
-    res.send(doc);
-  }).catch(e => {
+  try {
+    business = await business.save();
+    res.send(business);
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.get('/businesses', authenticate, (req, res) => {
-  let total = 0;
+router.get('/businesses', authenticate, async (req, res) => {
   let page  = _.toInteger(_.get(req, 'query.page', defaultPage));
   let limit = _.toInteger(_.get(req, 'query.limit', defaultLimit));
   let params = _.get(req, 'query.params', defaultQueryParams);
+  let skip = limit * (page - 1);
 
   try {
     params = _.first(JSON.parse(params));
@@ -32,40 +33,36 @@ router.get('/businesses', authenticate, (req, res) => {
     console.log(e);
   }
 
-  Business.count(params).then(count => {
-    total = count;
-    return Business
-      .find(params)
-      .skip(limit * (page - 1))
-      .limit(limit)
-      .populate('orders')
-      .exec();
-  }).then(businesses => {
+  try {
+    const total = await Business.count(params);
+    const businesses = await Business
+      .find(params).skip(skip).limit(limit).populate('orders');
     res.send({ total, page, limit, businesses });
-  }, (e) => {
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.get('/businesses/:id', authenticate, (req, res) => {
+router.get('/businesses/:id', authenticate, async (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
-  Business.findOne({ _id: id }).populate('orders').then(business => {
+  try {
+    const business = await Business.findById(id).populate('orders');
     if (!business) {
       return res.status(404).send();
     }
 
     res.send({ business });
-  }, e => {
+  } catch (e) {
     res.status(400).send(e);
-  });
+  }
 });
 
-router.patch('/businesses/:id', authenticate, (req, res) => {
+router.patch('/businesses/:id', authenticate, async (req, res) => {
   const id = req.params.id;
   const body = _.omit(req.body, ['_id']);
 
@@ -73,36 +70,37 @@ router.patch('/businesses/:id', authenticate, (req, res) => {
     return res.status(404).send();
   }
 
-  Business
-    .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
-    .populate('orders')
-    .then(business => {
-      if (!business) {
-        return res.status(404).send();
-      }
+  try {
+    const business = await Business
+      .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
+      .populate('orders')
+    if (!business) {
+      return res.status(404).send();
+    }
 
-      res.send({ business });
-    }).catch(e => {
-      res.status(400).send(e);
-    });
+    res.send({ business });
+  } catch (e) {
+    res.status(400).send(e);
+  }
 });
 
-router.delete('/businesses/:id', authenticate, (req, res) => {
+router.delete('/businesses/:id', authenticate, async (req, res) => {
   const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
-  Business.findOneAndRemove({ _id: id }).then(business => {
+  try {
+    const business = await Business.findOneAndRemove({ _id: id });
     if (!business) {
       return res.status(404).send();
     }
 
     res.send({ business });
-  }).catch((e) => {
+  } catch (e) {
     res.status(400).send();
-  });
+  }
 });
 
 module.exports = router;

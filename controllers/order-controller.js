@@ -21,6 +21,7 @@ router.post('/orders', authenticate, async (req, res) => {
     });
     order.business = await Business
       .findByIdAndUpdate({ _id: businessId }, { $push: { orders: order } }, { new: true })
+      .populate({ path: 'customer', populate: { path: 'profile' } })
       .populate('orders');
     res.send(order);
   } catch (e) {
@@ -79,6 +80,7 @@ router.post('/orders/:id/charges/:chargeId/refunds', authenticate, async (req, r
     const update = { refund: refund.id, status: 'refunded' };
     const order = await Order
       .findByIdAndUpdate({ _id: id }, { $set: update }, { new: true })
+      .populate({ path: 'customer', populate: { path: 'profile' } })
       .populate('business');
     res.send({ order });
   } catch (e) {
@@ -118,7 +120,9 @@ router.get('/orders/:id', authenticate, async (req, res) => {
   }
 
   try {
-    const order = await Order.findById(id).populate('business');
+    const order = await Order.findById(id)
+      .populate({ path: 'customer', populate: { path: 'profile' } })
+      .populate('business');
     if (!order) {
       return res.status(404).send();
     }
@@ -139,6 +143,7 @@ router.patch('/orders/:id', authenticate, async (req, res) => {
   try {
     const order = await Order
       .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
+      .populate({ path: 'customer', populate: { path: 'profile' } })
       .populate('business');
     if (!order) {
       return res.status(404).send();
