@@ -11,10 +11,11 @@ var OrderSchema = new mongoose.Schema({
   charge: { type: String, trim: true },
   refund: { type: String, trim: true },
   events: [{
-    time: { type: Date, default: Date.now },
-    name: { type: String, trim: true }
+    creator: { type: String, enum: ['customer', 'business'], default: 'customer', trim: true },
+    name: { type: String, trim: true },
+    time: { type: Date, default: Date.now }
   }],
-  status: { type: String, enum: ['created', 'paid', 'canceled', 'refunded'], trim: true }
+  status: { type: String, enum: ['created', 'paid', 'canceled', 'refunded', 'served'], trim: true }
 }, {
   timestamps: true,
   retainKeyOrder: true

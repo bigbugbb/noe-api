@@ -33,7 +33,7 @@ router.post('/orders', authenticate, async (req, res) => {
   }
 });
 
-router.post('/orders/:id/charges', authenticate, async (req, res) => {
+router.post('/orders/:id/charge', authenticate, async (req, res) => {
   const id = req.params.id;
   const source = _.get(req.body, 'source', '');
   const email = _.get(req.body, 'email', '');
@@ -70,7 +70,7 @@ router.post('/orders/:id/charges', authenticate, async (req, res) => {
   }
 });
 
-router.post('/orders/:id/charges/:chargeId/refunds', authenticate, async (req, res) => {
+router.post('/orders/:id/charge/:chargeId/refund', authenticate, async (req, res) => {
   const id = req.params.id;
   const chargeId = req.params.chargeId;
 
@@ -87,6 +87,67 @@ router.post('/orders/:id/charges/:chargeId/refunds', authenticate, async (req, r
       .findByIdAndUpdate({ _id: id }, { $set: update, $push: { events: { name: 'refunded' } } }, { new: true })
       .populate({ path: 'customer', populate: { path: 'profile' } })
       .populate('business');
+    res.send({ order });
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+router.post('/orders/:id/cancel', authenticate, async (req, res) => {
+  const id = req.params.id;
+  const status = 'canceled';
+  const creator = _.get(req.body, 'event_creator', 'customer');
+
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  try {
+    let order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).send();
+    }
+
+    if (_.get(order, 'status') !== status) {
+      order.status = status;
+      order.events.push({ creator, name: status });
+      await order.save();
+    }
+
+    order = await Order.findById(id)
+      .populate({ path: 'customer', populate: { path: 'profile' } })
+      .populate('business');
+
+    res.send({ order });
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+router.post('/orders/:id/serve', authenticate, async (req, res) => {
+  const id = req.params.id;
+  const status = 'served';
+
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  try {
+    let order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).send();
+    }
+
+    if (_.get(order, 'status') !== status) {
+      order.status = status;
+      order.events.push({ creator: 'business', name: status });
+      await order.save();
+    }
+
+    order = await Order.findById(id)
+      .populate({ path: 'customer', populate: { path: 'profile' } })
+      .populate('business');
+
     res.send({ order });
   } catch (e) {
     res.status(400).send(e);
@@ -146,19 +207,13 @@ router.patch('/orders/:id', authenticate, async (req, res) => {
   }
 
   try {
-    let order = await Order.findById(id);
+    const order = await Order
+      .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
+      .populate({ path: 'customer', populate: { path: 'profile' } })
+      .populate('business');
     if (!order) {
       return res.status(404).send();
     }
-
-    const status = _.get(body, 'status', order.status);
-    if (status !== order.status) {
-      body.events.push({ name: status });
-    }
-
-    order = await Order.findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
-      .populate({ path: 'customer', populate: { path: 'profile' } })
-      .populate('business');
 
     res.send({ order });
   } catch (e) {
