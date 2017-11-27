@@ -10,6 +10,10 @@ var OrderSchema = new mongoose.Schema({
   price: { type: Number, min: 0, max: 100000000 },
   charge: { type: String, trim: true },
   refund: { type: String, trim: true },
+  events: [{
+    time: { type: Date, default: Date.now },
+    name: { type: String, trim: true }
+  }],
   status: { type: String, enum: ['created', 'paid', 'canceled', 'refunded'], trim: true }
 }, {
   timestamps: true,

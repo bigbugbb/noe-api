@@ -17,7 +17,11 @@ router.post('/orders', authenticate, async (req, res) => {
 
   try {
     const order = await Order.create({
-      customer: customerId, business: businessId, price, status: 'created'
+      customer: customerId,
+      business: businessId,
+      price,
+      events: [{ name: 'created' }],
+      status: 'created'
     });
     order.business = await Business
       .findByIdAndUpdate({ _id: businessId }, { $push: { orders: order } }, { new: true })
@@ -56,6 +60,7 @@ router.post('/orders/:id/charges', authenticate, async (req, res) => {
       metadata: { order: id }
     });
     order.charge = charge.id;
+    order.events.push({ name: 'paid' });
     order.status = 'paid';
     order = await order.save();
 
@@ -79,7 +84,7 @@ router.post('/orders/:id/charges/:chargeId/refunds', authenticate, async (req, r
     });
     const update = { refund: refund.id, status: 'refunded' };
     const order = await Order
-      .findByIdAndUpdate({ _id: id }, { $set: update }, { new: true })
+      .findByIdAndUpdate({ _id: id }, { $set: update, $push: { events: { name: 'refunded' } } }, { new: true })
       .populate({ path: 'customer', populate: { path: 'profile' } })
       .populate('business');
     res.send({ order });
@@ -141,13 +146,20 @@ router.patch('/orders/:id', authenticate, async (req, res) => {
   }
 
   try {
-    const order = await Order
-      .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
-      .populate({ path: 'customer', populate: { path: 'profile' } })
-      .populate('business');
+    let order = await Order.findById(id);
     if (!order) {
       return res.status(404).send();
     }
+
+    const status = _.get(body, 'status', order.status);
+    if (status !== order.status) {
+      body.events.push({ name: status });
+    }
+
+    order = await Order.findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
+      .populate({ path: 'customer', populate: { path: 'profile' } })
+      .populate('business');
+
     res.send({ order });
   } catch (e) {
     res.status(400).send(e);
