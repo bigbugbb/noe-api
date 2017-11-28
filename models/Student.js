@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const avatarUtils = require('../utils/upload-avatar');
 const _ = require('lodash');
 
 var Schema = mongoose.Schema;
@@ -48,6 +49,18 @@ var StudentSchema = new mongoose.Schema({
   timestamps: true,
   retainKeyOrder: true
 });
+
+StudentSchema.virtual('avatarKeyPrefix').get(function () {
+  return `uploads/${this._id}/images`;
+});
+
+class StudentClass {
+  uploadAvatar(avatar) {
+    return avatarUtils.uploadAvatar(avatar, this.avatarKeyPrefix);
+  }
+}
+
+StudentSchema.loadClass(StudentClass);
 
 var Student = mongoose.model('Student', StudentSchema);
 

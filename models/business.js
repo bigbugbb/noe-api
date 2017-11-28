@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const avatarUtils = require('../utils/upload-avatar');
 const _ = require('lodash');
 
 var Schema = mongoose.Schema;
@@ -35,6 +36,24 @@ var BusinessSchema = new mongoose.Schema({
 }, {
   timestamps: true,
   retainKeyOrder: true
+});
+
+BusinessSchema.virtual('avatarKeyPrefix').get(function() {
+  const { _id, owner } = this;
+  return `uploads/${owner}/businesses/${_id}/images`;
+});
+
+class BusinessClass {
+  uploadAvatar(avatar) {
+    return avatarUtils.uploadAvatar(avatar, this.avatarKeyPrefix);
+  }
+}
+
+BusinessSchema.loadClass(BusinessClass);
+
+BusinessSchema.pre('findOneAndUpdate', function (next) {
+  this.options.runValidators = true;
+  next();
 });
 
 var Business = mongoose.model('Business', BusinessSchema);

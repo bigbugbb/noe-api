@@ -71,7 +71,12 @@ class UserClass {
     const profile = new RoleClass[user.role](_.pick(data, ['email', 'phone']));
 
     return profile.save().then(() => {
-      return user.update({ $set: { profile: profile._id }});
+      const updates = {
+        $set: {
+          profile: profile._id
+        }
+      };
+      return user.update(updates, { runValidators: true });
     });
   }
 
@@ -114,12 +119,12 @@ class UserClass {
 
   removeToken(token) {
     const user = this;
-
-    return user.update({
+    const updates = {
       $pull: {
         tokens: { token }
       }
-    });
+    };
+    return user.update(updates, { runValidators: true });
   }
 
   static findByToken(token) {

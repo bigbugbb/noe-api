@@ -69,12 +69,19 @@ router.patch('/companies/:id', authenticate, async (req, res) => {
     return res.status(404).send();
   }
 
+  let company = await Company.findById(id);
+  if (!company) {
+    return res.status(404).send();
+  }
+
   try {
-    const company = await Company
-      .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true });
-    if (!company) {
-      return res.status(404).send();
+    if (body.avatar.startsWith('data:')) {
+      const response = await company.uploadAvatar(body.avatar);
+      // Add ETag so the browser reloads image even if we have cache control
+      body.avatar = response.Location + `?ETag=${response.ETag}`;
     }
+    company = await Company
+      .findByIdAndUpdate(id, { $set: body }, { new: true });
 
     res.send({ company });
   } catch (e) {

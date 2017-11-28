@@ -71,12 +71,19 @@ router.patch('/students/:id', authenticate, async (req, res) => {
     return res.status(404).send();
   }
 
+  let student = await Student.findById(id);
+  if (!student) {
+    return res.status(404).send();
+  }
+
   try {
-    const student = await Student
-      .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true });
-    if (!student) {
-      return res.status(404).send();
+    if (body.avatar.startsWith('data:')) {
+      const response = await student.uploadAvatar(body.avatar);
+      // Add ETag so the browser reloads image even if we have cache control
+      body.avatar = response.Location + `?ETag=${response.ETag}`;
     }
+    student = await Student
+      .findByIdAndUpdate(id, { $set: body }, { new: true });
 
     res.send({ student });
   } catch (e) {

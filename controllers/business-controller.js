@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const _ = require('lodash');
 const db = require('../db');
+const { AWS } = require('../utils/aws-s3');
 const { ObjectID } = require('mongodb');
 const { Business } = require('../models/business');
 const { authenticate } = require('../middleware/authenticate');
@@ -70,13 +71,20 @@ router.patch('/businesses/:id', authenticate, async (req, res) => {
     return res.status(404).send();
   }
 
+  let business = await Business.findById(id);
+  if (!business) {
+    return res.status(404).send();
+  }
+
   try {
-    const business = await Business
-      .findByIdAndUpdate({ _id: id }, { $set: body }, { new: true })
-      .populate('orders')
-    if (!business) {
-      return res.status(404).send();
+    if (body.avatar.startsWith('data:')) {
+      const response = await business.uploadAvatar(body.avatar);
+      // Add ETag so the browser reloads image even if we have cache control
+      body.avatar = response.Location + `?ETag=${response.ETag}`;
     }
+    business = await Business
+      .findByIdAndUpdate(id, { $set: body }, { new: true })
+      .populate('orders')
 
     res.send({ business });
   } catch (e) {
