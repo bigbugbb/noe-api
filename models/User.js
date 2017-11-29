@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoosastic = require('mongoosastic');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
@@ -65,21 +66,6 @@ class UserClass {
     return _.pick(userObject, ['_id', 'email', 'role', 'profile']);
   }
 
-  createProfile(data) {
-    const user = this;
-    const RoleClass = { Student, School, Company };
-    const profile = new RoleClass[user.role](_.pick(data, ['email', 'phone']));
-
-    return profile.save().then(() => {
-      const updates = {
-        $set: {
-          profile: profile._id
-        }
-      };
-      return user.update(updates, { runValidators: true });
-    });
-  }
-
   generateAuthToken() {
     const user = this;
     const access = 'auth';
@@ -127,6 +113,15 @@ class UserClass {
     return user.update(updates, { runValidators: true });
   }
 
+  static async createUserWithProfile(data) {
+    const user = new User(data);
+    const RoleClass = { Student, School, Company };
+    const profile = new RoleClass[user.role](_.pick(data, ['email', 'phone']));
+
+    user.profile = await profile.save();
+    return await user.save();
+  }
+
   static findByToken(token) {
     const User = this;
     let decoded;
@@ -166,8 +161,6 @@ class UserClass {
   }
 }
 
-UserSchema.loadClass(UserClass);
-
 UserSchema.pre('save', function (next) {
   var user = this;
 
@@ -183,6 +176,27 @@ UserSchema.pre('save', function (next) {
   }
 });
 
-var User = mongoose.model('User', UserSchema);
+UserSchema.pre('findOneAndUpdate', function (next) {
+  this.options.runValidators = true;
+  next();
+});
+
+UserSchema.loadClass(UserClass);
+UserSchema.plugin(mongoosastic);
+
+let User = mongoose.model('User', UserSchema);
+let stream = User.synchronize(), count = 0;
+
+stream.on('data', function(err, doc) {
+  count++;
+});
+
+stream.on('close', function() {
+  console.log('indexed ' + count + ' user documents!');
+});
+
+stream.on('error', function(err) {
+  console.log(err);
+});
 
 module.exports = { User };

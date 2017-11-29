@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoosastic = require('mongoosastic');
 const validator = require('validator');
 const avatarUtils = require('../utils/upload-avatar');
 const _ = require('lodash');
@@ -45,6 +46,11 @@ SchoolSchema.virtual('avatarKeyPrefix').get(function () {
   return `uploads/${this._id}/images`;
 });
 
+SchoolSchema.pre('findOneAndUpdate', function (next) {
+  this.options.runValidators = true;
+  next();
+});
+
 class SchoolClass {
   uploadAvatar(avatar) {
     return avatarUtils.uploadAvatar(avatar, this.avatarKeyPrefix);
@@ -52,7 +58,21 @@ class SchoolClass {
 }
 
 SchoolSchema.loadClass(SchoolClass);
+SchoolSchema.plugin(mongoosastic);
 
-var School = mongoose.model('School', SchoolSchema);
+let School = mongoose.model('School', SchoolSchema);
+let stream = School.synchronize(), count = 0;
+
+stream.on('data', function(err, doc) {
+  count++;
+});
+
+stream.on('close', function() {
+  console.log('indexed ' + count + ' school documents!');
+});
+
+stream.on('error', function(err) {
+  console.log(err);
+});
 
 module.exports = { School };

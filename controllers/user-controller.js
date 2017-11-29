@@ -11,8 +11,7 @@ router.post('/users', async (req, res) => {
   const body = _.pick(req.body, ['email', 'phone', 'password', 'role']);
 
   try {
-    let user = await new User(body).save();
-    await user.createProfile(body);
+    let user = await User.createUserWithProfile(body);
     const token = await user.generateAuthToken();
     user = await User.findById(user.id).populate('profile');
     res.header('x-auth', token).send(user);
