@@ -27,7 +27,7 @@ var UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 6,
+    minlength: 8,
     maxlength: 64
   },
   tokens: [{
@@ -48,7 +48,8 @@ var UserSchema = new mongoose.Schema({
   },
   profile: {
     type: Schema.ObjectId,
-    refPath: 'role'
+    refPath: 'role',
+    required: true
   },
   resetPasswordToken: String,
   resetPasswordExpires: Date

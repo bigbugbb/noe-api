@@ -77,10 +77,16 @@ router.patch('/businesses/:id', authenticate, async (req, res) => {
   }
 
   try {
-    if (body.avatar.startsWith('data:')) {
-      const response = await business.uploadAvatar(body.avatar);
+    const avatar = _.get(body, 'avatar', '');
+    const content = _.get(body, 'content', '');
+    if (!_.isEmpty(avatar) && avatar.startsWith('data:')) {
+      const response = await business.uploadAvatar(avatar);
       // Add ETag so the browser reloads image even if we have cache control
       body.avatar = response.Location + `?ETag=${response.ETag}`;
+    }
+    if (!_.isEmpty(content) && !content.startsWith('http')) {
+      const response = await business.uploadContent(content);
+      body.content = response.Location + `?ETag=${response.ETag}`;
     }
     business = await Business
       .findByIdAndUpdate(id, { $set: body }, { new: true })

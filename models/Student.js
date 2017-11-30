@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const mongoosastic = require('mongoosastic');
 const validator = require('validator');
-const avatarUtils = require('../utils/upload-avatar');
+const s3Uploads = require('../utils/s3-uploads');
 const _ = require('lodash');
 
 var Schema = mongoose.Schema;
@@ -62,7 +62,7 @@ StudentSchema.pre('findOneAndUpdate', function (next) {
 
 class StudentClass {
   uploadAvatar(avatar) {
-    return avatarUtils.uploadAvatar(avatar, this.avatarKeyPrefix);
+    return s3Uploads.uploadAvatar(avatar, this.avatarKeyPrefix);
   }
 }
 

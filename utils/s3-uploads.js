@@ -16,6 +16,19 @@ async function uploadAvatar(avatar, prefix) {
   return await promisify(s3.upload.bind(s3))(object);
 }
 
+async function uploadContent(content, prefix) {
+  const s3 = new AWS.S3({ params: { Bucket: process.env.AWS_BUCKET } });
+  const key = `${prefix}/content.html`;
+  const object = {
+    Key: key,
+    Body: content,
+    ACL: 'public-read',
+    ContentType: 'text/html; charset=utf-8',
+    CacheControl: `max-age=${86400 * 365}`
+  };
+  return await promisify(s3.upload.bind(s3))(object);
+}
+
 function decodeBase64Image(dataString) {
   const matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
     response = {};
@@ -30,4 +43,8 @@ function decodeBase64Image(dataString) {
   return response;
 }
 
-module.exports = { uploadAvatar, decodeBase64Image };
+module.exports = {
+  uploadAvatar,
+  uploadContent,
+  decodeBase64Image
+};

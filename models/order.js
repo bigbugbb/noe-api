@@ -16,7 +16,12 @@ var OrderEventSchema = new mongoose.Schema({
 })
 
 var OrderSchema = new mongoose.Schema({
-  customer: { type: Schema.ObjectId, ref: 'User', es_indexed: true },
+  customer: {
+    type: Schema.ObjectId,
+    ref: 'User',
+    require: true,
+    es_indexed: true
+  },
   business: { type: Schema.ObjectId, ref: 'Business', es_indexed: true },
   price: { type: Number, min: 0, max: 100000000, es_indexed: true },
   charge: { type: String, es_indexed: true },
