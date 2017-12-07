@@ -59,8 +59,8 @@ var BusinessSchema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    min: 0,
-    max: 1000000,
+    min: [0, 'Price must be larger than 0'],
+    max: [1000000, 'Maximum allowed price is 1000000'],
     default: 0,
     required: true,
     es_indexed: true
