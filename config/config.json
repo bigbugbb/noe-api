@@ -1,6 +1,9 @@
 {
   "test": {
     "PORT": 3000,
+    "SOCKET_PORT": 3001,
+    "REDIS_HOST": "127.0.0.1",
+    "REDIS_PORT": 16379,
     "MONGODB_URI": "mongodb://localhost:27017/noe-app-test",
     "JWT_SECRET": "poijasdf98435jpgfdpoij3",
     "STRIPE_API_KEY": "sk_test_8EbSvbjheqBc8UXlt9anyFUT",
@@ -11,6 +14,9 @@
   },
   "development": {
     "PORT": 3000,
+    "SOCKET_PORT": 3001,
+    "REDIS_HOST": "127.0.0.1",
+    "REDIS_PORT": 16379,
     "MONGODB_URI": "mongodb://localhost:27017/noe-app",
     "JWT_SECRET": "pojiaj234oi234oij234oij4",
     "STRIPE_API_KEY": "sk_test_8EbSvbjheqBc8UXlt9anyFUT",
