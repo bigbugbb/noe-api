@@ -5,7 +5,13 @@ const cors = require('../middleware/cors');
 const bodyParser = require('body-parser');
 
 const models = [
-  'user', 'student', 'school', 'company', 'business', 'order'
+  'user',
+  'student',
+  'school',
+  'company',
+  'business',
+  'order',
+  'message'
 ];
 
 app.use(cors());
