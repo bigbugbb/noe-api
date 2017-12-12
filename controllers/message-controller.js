@@ -8,58 +8,43 @@ const { Thread } = require('../models/thread');
 const { authenticate } = require('../middleware/authenticate');
 
 const defaultPage = 1;
-const defaultLimit = 20;
+const defaultLimit = 30;
 
 router.post('/messages', authenticate, async (req, res) => {
-  let { author, target, text } = req.body;
+  let { author, target, text, thread } = req.body;
 
-  if (!ObjectID.isValid(author)) {
-    return res.status(404).send();
-  }
-  if (!ObjectID.isValid(target)) {
+  if (!ObjectID.isValid(author) || !ObjectID.isValid(target)) {
     return res.status(404).send();
   }
 
   try {
-    let message = await Message.create({ author, target, text });
-    message = await Message.findById(message._id)
-      .populate({ path: 'author', populate: { path: 'profile' } })
-      .populate({ path: 'target', populate: { path: 'profile' } });
-    let thread = await Thread.findOne({ author, target });
-    if (_.isEmpty(thread)) {
-      thread = await Thread.create({ author, target, message });
-    } else {
-      thread.lastMessage = message;
-      await thread.save();
-    }
-    res.send({ message, thread });
+    let message = await Message.create({ author, target, text, thread });
+    res.send({ message });
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
-router.get('/messages', authenticate, async (req, res) => {
-  // let query = _.get(req, 'query', {});
-  // let page  = _.toInteger(_.get(query, 'page', defaultPage));
-  // let limit = _.toInteger(_.get(query, 'limit', defaultLimit));
-  // let owner = _.get(query, 'owner', '');
-  // let skip = limit * (page - 1);
+router.get('/threads/:threadId/messages', authenticate, async (req, res) => {
+  let query = _.get(req, 'query', {});
+  let limit = _.toInteger(_.get(query, 'limit', defaultLimit));
+  let lastTime = _.toInteger(_.get(query, 'lastTime', Date.now()));
+  let threadId = req.params.threadId;
 
-  // query = _.omit(query, ['page', 'limit', 'owner']);
+  if (!ObjectID.isValid(threadId)) {
+    return res.status(404).send();
+  }
 
-  // try {
-  //   if (!_.isEmpty(owner)) {
-  //     const values = await Business.find({ owner }).select('_id');
-  //     _.set(query, 'business', { $in: values });
-  //   }
-  //   const total = await Order.count(query);
-  //   const messages = await Order.find(query).skip(skip).limit(limit)
-  //     .populate({ path: 'customer', populate: { path: 'profile' } })
-  //     .populate('business');
-  //   res.send({ total, page, limit, messages });
-  // } catch (e) {
-  //   res.status(400).send(e);
-  // }
+  try {
+    const messages = await Message.find({
+      thread: threadId,
+      sentAt: { $lt: lastTime }
+    }).limit(limit).sort({ sentAt: 1 });
+
+    res.send({ messages });
+  } catch (e) {
+    res.status(400).send(e);
+  }
 });
 
 module.exports = router;

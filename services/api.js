@@ -11,6 +11,7 @@ const models = [
   'company',
   'business',
   'order',
+  'thread',
   'message'
 ];
 

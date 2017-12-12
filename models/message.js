@@ -9,16 +9,15 @@ var MessageSchema = new mongoose.Schema({
   author: { type: Schema.ObjectId, ref: 'User', required: true },
   target: { type: Schema.ObjectId, ref: 'User', required: true },
   text: { type: String, required: true },
-  sentAt: { type: Date, default: Date.now },
-  read: { type: Boolean, default: false }
+  sentAt: { type: Date, index: true, default: Date.now },
+  thread: { type: Schema.ObjectId, index: true, required: true }
 }, {
-  timestamps: true,
   retainKeyOrder: true
 });
 
 MessageSchema.path('text').validate(function (text) {
-  return !_.isEmpty(text) && text.length <= 2048;
-}, 'Text must be present but less than 2048 characters');
+  return !_.isEmpty(text) && text.length <= 640;
+}, 'Text must be present but less than 640 characters');
 
 MessageSchema.pre('findOneAndUpdate', function (next) {
   this.options.runValidators = true;

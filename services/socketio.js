@@ -37,8 +37,8 @@ const contact = io.of('/contact');
 
 contact.on('connection', (socket) => {
   socket.on('join', (user, room) => {
-    Object.keys(socket.rooms).filter((r) => r != socket.id)
-      .forEach((r) => socket.leave(r));
+    Object.keys(socket.rooms)
+      .filter(r => r != socket.id).forEach(r => socket.leave(r));
     setTimeout(() => {
       socket.join(room);
       console.log(`user ${user} joined ${room}`);
@@ -46,16 +46,31 @@ contact.on('connection', (socket) => {
   });
 
   socket.on('add-message', async (room, token, author, target, text) => {
-    try {
-      const response = await axios({
+    const updateThread = async (token, author, target, text) => {
+      const res = await axios({
         method: 'post',
-        url: apiHost + '/messages',
+        url: apiHost + '/threads',
         data: { author, target, text },
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const { message, thread } = response.data;
-      contact.to(room).emit('message-added', message);
+      return res.data.thread;
+    };
+
+    const createMessage = async (token, author, target, text, thread) => {
+      const res = await axios({
+        method: 'post',
+        url: apiHost + '/messages',
+        data: { author, target, text, thread },
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      return res.data.message;
+    };
+
+    try {
+      const thread = await updateThread(token, author, target, text);
       contact.to(room).emit('thread-updated', thread);
+      const message = await createMessage(token, author, target, text, thread);
+      contact.to(room).emit('message-added', message);
     } catch (e) {
       console.error(`Error: ${e.code}`);
     }
