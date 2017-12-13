@@ -5,19 +5,6 @@ const _ = require('lodash');
 
 var Schema = mongoose.Schema;
 
-var ThreadStateSchema = new mongoose.Schema({
-  state: {
-    type: String,
-    enum: ['opened', 'closed'],
-    required: true
-  },
-  messagesNotRead: {
-    type: Number,
-    min: 0,
-    required: true
-  }
-});
-
 var ThreadSchema = new mongoose.Schema({
   author: {
     type: Schema.ObjectId,
@@ -35,8 +22,14 @@ var ThreadSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  authorThreadState: ThreadStateSchema,
-  targetThreadState: ThreadStateSchema
+  authorLastAccess: {
+    type: Date,
+    required: true
+  },
+  targetLastAccess: {
+    type: Date,
+    required: true
+  }
 }, {
   timestamps: true,
   retainKeyOrder: true
@@ -52,28 +45,12 @@ ThreadSchema.pre('findOneAndUpdate', function (next) {
 });
 
 class ThreadClass {
-  computeMessagesNotRead(author, target) {
-    const ats = this.authorThreadState;
-    const tts = this.targetThreadState;
-    const authorString = this.author.toHexString();
-
-    if (author === authorString) {
-      tts.messagesNotRead += _.isEqual(tts.state, 'closed') ? 1 : 0;
-    } else if (target === authorString) {
-      ats.messagesNotRead += _.isEqual(ats.state, 'closed') ? 1 : 0;
+  updateLastAccess(userId) {
+    if (userId === this.author.id) {
+      this.authorLastAccess = Date.now();
+    } else if (userId === this.target.id) {
+      this.targetLastAccess = Date.now();
     }
-  }
-
-  async updateState(user, state) {
-    const { author, target } = this;
-
-    if (user === author.id) {
-      this.authorThreadState = { state, messagesNotRead: 0 };
-    } else if (user === target.id) {
-      this.targetThreadState = { state, messagesNotRead: 0 };
-    }
-
-    await this.save();
   }
 }
 ThreadSchema.loadClass(ThreadClass);

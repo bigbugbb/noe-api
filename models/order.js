@@ -12,7 +12,10 @@ var OrderEventSchema = new mongoose.Schema({
     default: 'customer'
   },
   name: String,
-  time: { type: Date, default: Date.now }
+  time: {
+    type: Date,
+    default: Date.now
+  }
 })
 
 var OrderSchema = new mongoose.Schema({

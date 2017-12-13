@@ -10,23 +10,25 @@ const { authenticate } = require('../middleware/authenticate');
 router.post('/threads', authenticate, async (req, res) => {
   let { author, target, text } = req.body;
 
-  if (!ObjectID.isValid(author) || !ObjectID.isValid(target)) {
-    return res.status(404).send();
-  }
-
   try {
-    let thread = await Thread.findOne({ $or: [{ author, target }, { target, author }] });
-    if (_.isEmpty(thread)) {
-      thread = await Thread.create({
-        author, target, lastMessage: text,
-        authorThreadState: { state: 'opened', messagesNotRead: 0 },
-        targetThreadState: { state: 'closed', messagesNotRead: 1 }
-      });
-    } else {
-      thread.lastMessage = text;
-      thread.computeMessagesNotRead(author, target);
-      await thread.save();
-    }
+    // upserting a thread rather than creating one so we can do data populating
+    const thread = await Thread
+      .findByIdAndUpdate(
+        'non_existent', // use non-existent id to trigger the upsert
+        {
+          $set: {
+            author,
+            target,
+            lastMessage: text,
+            authorLastAccess: Date.now(),
+            targetLastAccess: Date.now()
+          }
+        },
+        { upsert: true, new: true }
+      )
+      .populate('author')
+      .populate('target');
+
     res.send({ thread });
   } catch (e) {
     res.status(400).send(e);
@@ -51,22 +53,24 @@ router.get('/users/:userId/threads', authenticate, async (req, res) => {
   }
 });
 
-router.patch('/threads/:id', authenticate, async (req, res) => {
-  const id = req.params.id;
-  const { user, state } = req.body;
+router.patch('/users/:userId/threads/:threadId', authenticate, async (req, res) => {
+  const { userId, threadId } = req.params;
+  const { lastMessage } = req.body;
 
-  if (!ObjectID.isValid(id) || !ObjectID.isValid(user)) {
+  if (!ObjectID.isValid(userId) || !ObjectID.isValid(threadId)) {
     return res.status(404).send();
   }
-  if (_.isEmpty(state)) {
+
+  if (_.isEmpty(lastMessage)) {
     return res.status(400).send();
   }
 
   try {
-    let thread = await Thread.findById(id)
+    const thread = await Thread.findById(threadId)
       .populate('author')
       .populate('target');
-    await thread.updateState(user, state);
+    thread.lastMessage = lastMessage;
+    thread.updateLastAccess(userId);
 
     res.send({ thread });
   } catch (e) {

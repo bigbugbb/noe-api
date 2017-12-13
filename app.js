@@ -1,2 +1,2 @@
 require('./services/api');
-require('./services/socketio');
+require('./services/chat');
