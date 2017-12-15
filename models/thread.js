@@ -5,29 +5,42 @@ const _ = require('lodash');
 
 var Schema = mongoose.Schema;
 
-var ThreadSchema = new mongoose.Schema({
-  author: {
+var JabberSchema = new mongoose.Schema({
+  id: {
     type: Schema.ObjectId,
     ref: 'User',
     index: true,
     required: true
   },
+  name: {
+    type: String,
+    trim: true,
+    required: true
+  },
+  avatar: {
+    type: String,
+    trim: true,
+    required: true
+  },
+  lastAccess: {
+    type: Date,
+    required: true
+  }
+}, {
+  _id: false
+})
+
+var ThreadSchema = new mongoose.Schema({
+  author: {
+    type: JabberSchema,
+    required: true
+  },
   target: {
-    type: Schema.ObjectId,
-    ref: 'User',
-    index: true,
+    type: JabberSchema,
     required: true
   },
   lastMessage: {
     type: String,
-    required: true
-  },
-  authorLastAccess: {
-    type: Date,
-    required: true
-  },
-  targetLastAccess: {
-    type: Date,
     required: true
   }
 }, {
@@ -45,11 +58,18 @@ ThreadSchema.pre('findOneAndUpdate', function (next) {
 });
 
 class ThreadClass {
+  isUserInvolved(userId) {
+    return userId === this.author.id.toHexString() ||
+      userId === this.target.id.toHexString();
+  }
+
   updateLastAccess(userId) {
-    if (userId === this.author.id) {
-      this.authorLastAccess = Date.now();
-    } else if (userId === this.target.id) {
-      this.targetLastAccess = Date.now();
+    if (userId === this.author.id.toHexString()) {
+      this.author.lastAccess = Date.now();
+    } else if (userId === this.target.id.toHexString()) {
+      this.target.lastAccess = Date.now();
+    } else {
+      throw new Error("User wasn't involved in this thread.");
     }
   }
 }

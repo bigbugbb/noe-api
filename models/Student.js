@@ -51,6 +51,10 @@ var StudentSchema = new mongoose.Schema({
   retainKeyOrder: true
 });
 
+StudentSchema.virtual('name').get(function () {
+  return `${this.firstname} ${this.lastname}`;
+});
+
 StudentSchema.virtual('avatarKeyPrefix').get(function () {
   return `uploads/${this._id}/images`;
 });

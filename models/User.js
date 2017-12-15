@@ -56,6 +56,7 @@ var UserSchema = new mongoose.Schema({
 }, {
   timestamps: true,
   retainKeyOrder: true,
+  usePushEach: true,
   runSettersOnQuery: true, // Mongoose will not automatically lowercase the email in your queries
 });
 

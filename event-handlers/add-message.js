@@ -5,11 +5,11 @@ const axios = require('axios');
 
 const apiHost = 'http://localhost:3000/api/v1';
 
-const findThread = async function (author, target) {
+const findThread = async function (token, author, target) {
   return await Thread.findOne({
     $or: [
-      { author, target },
-      { author: target, target: author }
+      { 'author.id': author, 'target.id': target },
+      { 'author.id': target, 'target.id': author }
     ]
   });
 };
@@ -47,7 +47,7 @@ const createMessage = async function (token, author, target, text, thread) {
 const addMessageHandler = function (nsp) {
   return async (room, token, author, target, text) => {
     try {
-      let thread = await findThread(author, target);
+      let thread = await findThread(token, author, target);
       thread = _.isEmpty(thread) ?
         await createThread(token, author, target, text) :
         await updateThread(token, author, thread.id, text);
