@@ -18,22 +18,16 @@ router.post('/threads', authenticate, async (req, res) => {
     return res.status(404).send();
   }
 
-  const jabberIds = [ ObjectId(author), ObjectId(target) ];
-  let jabbers = await User.find({ _id: { $in: jabberIds } }).populate('profile');
-  jabbers = jabbers.map(jabber => {
-    return {
-      id: jabber._id,
-      name: jabber.profile.name,
-      avatar: jabber.profile.avatar,
-      lastAccess: Date.now()
-    }
+  let jabbers = await User.find({
+    _id: { $in: [ ObjectId(author), ObjectId(target) ] }
+  }).populate('profile').map(user => {
+    const { name, avatar } = user.profile;
+    return { id: user._id, name, avatar, lastAccess: Date.now() };
   });
 
   try {
     const thread = await Thread.create({
-      author: jabbers[0],
-      target: jabbers[1],
-      lastMessage: text
+      author: jabbers[0], target: jabbers[1], lastMessage: text
     });
 
     res.send({ thread });
