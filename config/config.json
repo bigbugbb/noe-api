@@ -9,8 +9,7 @@
     "STRIPE_API_KEY": "sk_test_8EbSvbjheqBc8UXlt9anyFUT",
     "AWS_REGION": "eu-west-1",
     "AWS_BUCKET": "noe-file-upload-ireland",
-    "ACCESS_KEY_ID": "AKIAJ3OD5WGW3M4XNDQA",
-    "SECRET_ACCESS_KEY": "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"
+    "IDENTITY_POOL_ID": "eu-west-1:f1fa485c-3004-4a64-8ef6-9364031eddee"
   },
   "development": {
     "PORT": 3000,
@@ -22,7 +21,6 @@
     "STRIPE_API_KEY": "sk_test_8EbSvbjheqBc8UXlt9anyFUT",
     "AWS_REGION": "eu-west-1",
     "AWS_BUCKET": "noe-file-upload-ireland",
-    "ACCESS_KEY_ID": "AKIAJ3OD5WGW3M4XNDQA",
-    "SECRET_ACCESS_KEY": "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"
+    "IDENTITY_POOL_ID": "eu-west-1:f1fa485c-3004-4a64-8ef6-9364031eddee"
   }
 }

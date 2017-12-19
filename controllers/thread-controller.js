@@ -18,9 +18,9 @@ router.post('/threads', authenticate, async (req, res) => {
     return res.status(404).send();
   }
 
-  let jabbers = await User.find({
-    _id: { $in: [ ObjectId(author), ObjectId(target) ] }
-  }).populate('profile').map(user => {
+  let jabbers = (await User.find({
+    _id: { $in: [ author, target ].map(v => ObjectId(v)) }
+  }).populate('profile')).map(user => {
     const { name, avatar } = user.profile;
     return { id: user._id, name, avatar, lastAccess: Date.now() };
   });
@@ -107,6 +107,7 @@ router.patch('/users/:userId/threads/:threadId', authenticate, async (req, res) 
     }
     thread.lastMessage = lastMessage;
     thread.updateLastAccess(userId);
+    thread.save();
 
     res.send({ thread });
   } catch (e) {
