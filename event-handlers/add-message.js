@@ -49,10 +49,13 @@ const addMessageHandler = function (nsp) {
   return async (room, token, author, target, text, uuid) => {
     try {
       let thread = await findThread(token, author, target);
-      thread = _.isEmpty(thread) ?
-        await createThread(token, author, target, text) :
-        await updateThread(token, author, thread.id, text);
-      nsp.to(room).emit('thread-updated', thread);
+      if (_.isEmpty(thread)) {
+        thread = await createThread(token, author, target, text);
+        nsp.to(room).emit('thread-created', thread);
+      } else {
+        thread = await updateThread(token, author, thread.id, text);
+        nsp.to(room).emit('thread-updated', thread);
+      }
       const message = await createMessage(token, author, target, text, thread, uuid);
       nsp.to(room).emit('message-added', message);
     } catch (e) {

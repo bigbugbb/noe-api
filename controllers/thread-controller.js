@@ -80,7 +80,7 @@ router.get('/users/:userId/threads', authenticate, async (req, res) => {
       { $match: match },
       { $lookup: lookup },
       { $addFields: { messagesNotRead: { $size: '$messagesNotRead' } } }
-    ]);
+    ]).sort({ updatedAt: -1 });
 
     res.send({ threads });
   } catch (e) {
