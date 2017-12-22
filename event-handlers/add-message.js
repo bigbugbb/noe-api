@@ -34,25 +34,26 @@ const updateThread = async function (token, userId, threadId, lastMessage) {
   return res.data.thread;
 };
 
-const createMessage = async function (token, author, target, text, thread) {
+const createMessage = async function (token, author, target, text, thread, uuid) {
   const res = await axios({
     method: 'post',
     url: `${apiHost}/messages`,
     data: { author, target, text, thread },
     headers: { 'Authorization': `Bearer ${token}` }
   });
+  res.data.message['uuid'] = uuid;
   return res.data.message;
 };
 
 const addMessageHandler = function (nsp) {
-  return async (room, token, author, target, text) => {
+  return async (room, token, author, target, text, uuid) => {
     try {
       let thread = await findThread(token, author, target);
       thread = _.isEmpty(thread) ?
         await createThread(token, author, target, text) :
         await updateThread(token, author, thread.id, text);
       nsp.to(room).emit('thread-updated', thread);
-      const message = await createMessage(token, author, target, text, thread);
+      const message = await createMessage(token, author, target, text, thread, uuid);
       nsp.to(room).emit('message-added', message);
     } catch (e) {
       console.error(`Error: ${e.code}`);
