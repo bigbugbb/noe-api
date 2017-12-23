@@ -33,6 +33,11 @@ var BusinessSchema = new mongoose.Schema({
       untouched: { type: 'string', index: 'not_analyzed' }
     }
   },
+  ownerName: {
+    type: String,
+    trim: true,
+    es_indexed: true
+  },
   type: { // TODO: update validator
     type: String,
     trim: true,
@@ -127,8 +132,8 @@ BusinessSchema.path('address').validate(function (address) {
 
 BusinessSchema.path('summary').validate(function (summary) {
   summary = summary.trim();
-  return !_.isEmpty(summary) && summary.length <= 600;
-}, 'Summary must be present but less than 600 characters');
+  return !_.isEmpty(summary) && summary.length <= 800;
+}, 'Summary must be present but less than 800 characters');
 
 BusinessSchema.path('currency').validate(function (currency) {
   currency = currency.trim();

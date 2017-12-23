@@ -41,23 +41,31 @@ const createMessage = async function (token, author, target, text, thread, uuid)
     data: { author, target, text, thread },
     headers: { 'Authorization': `Bearer ${token}` }
   });
+  res.data.message['thread'] = thread;
   res.data.message['uuid'] = uuid;
   return res.data.message;
 };
 
 const addMessageHandler = function (nsp) {
-  return async (room, token, author, target, text, uuid) => {
+  const emit = (nsp, rooms, eventName, ...args) => {
+    rooms.map(room => nsp.to(room).emit(eventName, args));
+  };
+
+  return async (token, author, target, text, uuid) => {
     try {
       let thread = await findThread(token, author, target);
       if (_.isEmpty(thread)) {
         thread = await createThread(token, author, target, text);
-        nsp.to(room).emit('thread-created', thread);
+        nsp.to(author).emit('thread-created', thread);
+        nsp.to(target).emit('thread-created', thread);
       } else {
         thread = await updateThread(token, author, thread.id, text);
-        nsp.to(room).emit('thread-updated', thread);
+        nsp.to(author).emit('thread-updated', thread);
+        nsp.to(target).emit('thread-updated', thread);
       }
       const message = await createMessage(token, author, target, text, thread, uuid);
-      nsp.to(room).emit('message-added', message);
+      nsp.to(author).emit('message-added', message);
+      nsp.to(target).emit('message-added', message);
     } catch (e) {
       console.error(`Error: ${e.code}`);
     }

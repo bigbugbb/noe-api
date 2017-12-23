@@ -6,6 +6,8 @@ const { ObjectID } = require('mongodb');
 const { Message } = require('../models/message');
 const { Thread } = require('../models/thread');
 const { authenticate } = require('../middleware/authenticate');
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 
 const defaultPage = 1;
 const defaultLimit = 30;
@@ -29,17 +31,30 @@ router.get('/threads/:threadId/messages', authenticate, async (req, res) => {
   let query = _.get(req, 'query', {});
   let limit = _.toInteger(_.get(query, 'limit', defaultLimit));
   let lastTime = _.toInteger(_.get(query, 'lastTime', Date.now()));
-  let threadId = req.params.threadId;
+  let threadId = ObjectId(req.params.threadId);
 
   if (!ObjectID.isValid(threadId)) {
     return res.status(404).send();
   }
 
   try {
-    const messages = await Message.find({
+    const conds = [{ $eq: ['$_id', '$$t_threadId'] }];
+    const match = {
       thread: threadId,
-      sentAt: { $lt: lastTime }
-    }).limit(limit).sort({ sentAt: 1 });
+      sentAt: { $lt: new Date(lastTime) }
+    };
+
+    const messages = await Message.aggregate([
+      { $match: match },
+      { $lookup: {
+          from: 'threads',
+          let: { t_threadId: '$thread' },
+          pipeline: [{ $match: { $expr: { $and: conds } } }],
+          as: 'thread'
+        }
+      },
+      { $unwind: '$thread' }
+    ]).limit(limit).sort({ sentAt: 1 });
 
     res.send({ messages });
   } catch (e) {

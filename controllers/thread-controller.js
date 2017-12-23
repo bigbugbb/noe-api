@@ -12,7 +12,7 @@ const { Message } = require('../models/message');
 const { authenticate } = require('../middleware/authenticate');
 
 router.post('/threads', authenticate, async (req, res) => {
-  let { author, target, text } = req.body;
+  let { uuid, author, target, text } = req.body;
 
   if (!ObjectID.isValid(author) || !ObjectID.isValid(target)) {
     return res.status(404).send();
@@ -27,7 +27,7 @@ router.post('/threads', authenticate, async (req, res) => {
 
   try {
     const thread = await Thread.create({
-      author: jabbers[0], target: jabbers[1], lastMessage: text
+      uuid, author: jabbers[0], target: jabbers[1], lastMessage: text
     });
 
     res.send({ thread });
