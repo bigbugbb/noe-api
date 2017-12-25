@@ -22,7 +22,7 @@ router.post('/threads', authenticate, async (req, res) => {
     _id: { $in: [ author, target ].map(v => ObjectId(v)) }
   }).populate('profile')).map(user => {
     const { name, avatar } = user.profile;
-    return { id: user._id, name, avatar, lastAccess: Date.now() };
+    return { id: user._id, name, role: user.role, avatar, lastAccess: Date.now() };
   });
 
   try {

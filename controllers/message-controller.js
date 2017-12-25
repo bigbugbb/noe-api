@@ -44,8 +44,10 @@ router.get('/threads/:threadId/messages', authenticate, async (req, res) => {
       sentAt: { $lt: new Date(lastTime) }
     };
 
+    const count = await Message.count(match);
     const messages = await Message.aggregate([
       { $match: match },
+      { $skip: Math.max(0, count - limit) },
       { $lookup: {
           from: 'threads',
           let: { t_threadId: '$thread' },
@@ -54,7 +56,7 @@ router.get('/threads/:threadId/messages', authenticate, async (req, res) => {
         }
       },
       { $unwind: '$thread' }
-    ]).limit(limit).sort({ sentAt: 1 });
+    ]);
 
     res.send({ messages });
   } catch (e) {

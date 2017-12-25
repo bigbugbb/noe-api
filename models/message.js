@@ -5,9 +5,12 @@ const _ = require('lodash');
 
 var Schema = mongoose.Schema;
 
+// Later sometime we may seprate the contact feature
+// out of the api server, so try to interact little
+// with collections except for threads.
 var MessageSchema = new mongoose.Schema({
-  author: { type: Schema.ObjectId, ref: 'User', required: true },
-  target: { type: Schema.ObjectId, ref: 'User', required: true },
+  author: { type: Schema.ObjectId, required: true }, // ref: 'User'
+  target: { type: Schema.ObjectId, required: true }, // ref: 'User'
   text: { type: String, required: true },
   sentAt: { type: Date, index: true, default: Date.now },
   thread: { type: Schema.ObjectId, index: true, required: true }
