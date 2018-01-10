@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const { ObjectID } = require('mongodb');
 const { User } = require('../models/user');
 const { authenticate } = require('../middleware/authenticate');
+const uuidv4 = require('uuid/v4');
 
 router.post('/users', async (req, res) => {
   const body = _.pick(req.body, ['email', 'phone', 'password', 'role']);
@@ -24,6 +25,45 @@ router.post('/users/login', async (req, res) => {
   const body = _.pick(req.body, ['email', 'password']);
   try {
     const user = await User.findByCredentials(body.email, body.password);
+    const token = await user.generateAuthToken();
+    res.header('x-auth', token).send(user);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+router.post('/users/facebook-login', async (req, res) => {
+  const body = _.pick(req.body, ['userID']);
+  try {
+    const user = await User.findByFacebookUserID(body.userID);
+    const token = await user.generateAuthToken();
+    res.header('x-auth', token).send(user);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+router.post('/users/facebook-signup', async (req, res) => {
+  const body = req.body;
+  const password = uuidv4();
+  const role = 'Student'; // only student use oauth to login/signup
+
+  _.assign(body, { password });
+
+  try {
+    let user = await User.createUserWithProfile(body);
+    const token = await user.generateAuthToken();
+    user = await User.findById(user.id).populate('profile');
+    res.header('x-auth', token).send(user);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+router.post('/users/google-login', async (req, res) => {
+  const body = _.pick(req.body, ['userID']);
+  try {
+    const user = await User.findByGoogleUserID(body.userID);
     const token = await user.generateAuthToken();
     res.header('x-auth', token).send(user);
   } catch (e) {

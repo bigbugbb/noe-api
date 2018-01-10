@@ -51,6 +51,8 @@ var UserSchema = new mongoose.Schema({
     refPath: 'role',
     required: true
   },
+  facebookUserID: String,
+  googleUserID: String,
   resetPasswordToken: String,
   resetPasswordExpires: Date
 }, {
@@ -159,6 +161,30 @@ class UserClass {
           }
         });
       });
+    });
+  }
+
+  static findByFacebookUserID(facebookUserID) {
+    const User = this;
+    return this.findOne({ facebookUserID }).populate('profile').then((user) => {
+      if (!user) {
+        return Promise.reject(
+          `Cannot find the user from facebook userID ${facebookUserID}.`
+        );
+      }
+      return user;
+    });
+  }
+
+  static findByGoogleUserID(googleUserID) {
+    const User = this;
+    return User.findOne({ googleUserID }).populate('profile').then((user) => {
+      if (!user) {
+        return Promise.reject(
+          `Cannot find the user from google userID ${googleUserID}.`
+        );
+      }
+      return user;
     });
   }
 }
