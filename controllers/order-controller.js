@@ -47,7 +47,9 @@ router.post('/orders/:id/charge', authenticate, async (req, res) => {
   }
 
   try {
-    let order = await Order.findById(id).populate('business');
+    let order = await Order.findById(id)
+      .populate({ path: 'customer', populate: { path: 'profile' } })
+      .populate('business');
     if (!order) {
       return res.status(404).send();
     }

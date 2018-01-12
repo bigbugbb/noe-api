@@ -9,6 +9,6 @@ docker start packt-redis
 docker rm packt-redis
 
 #connect redis-cli
-docker run -it --link packt-redis:redis --rm redis redis-cli -h redis -p 6379
+docker run --link packt-redis:redis --rm redis redis-cli -h redis -p 6379
 
-docker run -it --rm redis redis-cli --help
+docker run --rm redis redis-cli --help

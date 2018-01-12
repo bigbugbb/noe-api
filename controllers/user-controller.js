@@ -32,39 +32,37 @@ router.post('/users/login', async (req, res) => {
   }
 });
 
-router.post('/users/facebook-login', async (req, res) => {
-  const body = _.pick(req.body, ['userID']);
+router.get('/users/:uid/idtoken', async (req, res) => {
+  const uid = req.params.uid;
+
   try {
-    const user = await User.findByFacebookUserID(body.userID);
-    const token = await user.generateAuthToken();
-    res.header('x-auth', token).send(user);
+    const idToken = await User.generateCustomIdToken(uid);
+    res.status(200).send({ idToken });
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
-router.post('/users/facebook-signup', async (req, res) => {
-  const body = req.body;
-  const password = uuidv4();
-  const role = 'Student'; // only student use oauth to login/signup
+router.post('/users/oauth-signin', async (req, res) => {
+  const { user, additionalUserInfo, idToken } = req.body;
+  const body = _.pick(user, ['email', 'displayName', 'uid', 'photoURL']);
 
-  _.assign(body, { password });
+  body.email = body.email || additionalUserInfo.profile.email;
+  body.password = uuidv4();
+  body.name = body.displayName;
+  body.googleUserID = body.uid;
+  body.avatar = body.photoURL;
 
   try {
-    let user = await User.createUserWithProfile(body);
+    // verify idtoken
+    User.verifyCustomIdToken(idToken);
+    // find the user or create a new user with the profile data from the 3rd party
+    let user = await User.findOne({ email: body.email }).populate('profile');
+    if (_.isEmpty(user)) {
+      user = await User.createUserWithProfile(body);
+    }
     const token = await user.generateAuthToken();
-    user = await User.findById(user.id).populate('profile');
-    res.header('x-auth', token).send(user);
-  } catch (e) {
-    res.status(400).send(e);
-  }
-});
 
-router.post('/users/google-login', async (req, res) => {
-  const body = _.pick(req.body, ['userID']);
-  try {
-    const user = await User.findByGoogleUserID(body.userID);
-    const token = await user.generateAuthToken();
     res.header('x-auth', token).send(user);
   } catch (e) {
     res.status(400).send(e);

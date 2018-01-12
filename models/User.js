@@ -48,11 +48,8 @@ var UserSchema = new mongoose.Schema({
   },
   profile: {
     type: Schema.ObjectId,
-    refPath: 'role',
-    required: true
+    refPath: 'role'
   },
-  facebookUserID: String,
-  googleUserID: String,
   resetPasswordToken: String,
   resetPasswordExpires: Date
 }, {
@@ -120,7 +117,14 @@ class UserClass {
   static async createUserWithProfile(data) {
     const user = new User(data);
     const RoleClass = { Student, School, Company };
-    const profile = new RoleClass[user.role](_.pick(data, ['email', 'phone']));
+    const profile = new RoleClass[user.role](
+      _.pick(data, ['email', 'phone', 'avatar', 'name'])
+    );
+
+    const e = user.validateSync();
+    if (e) {
+      return Promise.reject(e);
+    }
 
     user.profile = await profile.save();
     return await user.save();
@@ -164,28 +168,13 @@ class UserClass {
     });
   }
 
-  static findByFacebookUserID(facebookUserID) {
-    const User = this;
-    return this.findOne({ facebookUserID }).populate('profile').then((user) => {
-      if (!user) {
-        return Promise.reject(
-          `Cannot find the user from facebook userID ${facebookUserID}.`
-        );
-      }
-      return user;
-    });
+  static generateCustomIdToken(uid) {
+    const token = jwt.sign({ uid }, process.env.OAUTH_JWT_SECRET).toString();
+    return token;
   }
 
-  static findByGoogleUserID(googleUserID) {
-    const User = this;
-    return User.findOne({ googleUserID }).populate('profile').then((user) => {
-      if (!user) {
-        return Promise.reject(
-          `Cannot find the user from google userID ${googleUserID}.`
-        );
-      }
-      return user;
-    });
+  static verifyCustomIdToken(token) {
+    jwt.verify(token, process.env.OAUTH_JWT_SECRET);
   }
 }
 

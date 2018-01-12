@@ -42,7 +42,8 @@ var OrderSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  retainKeyOrder: true
+  retainKeyOrder: true,
+  usePushEach: true
 });
 
 OrderSchema.pre('findOneAndUpdate', function (next) {
